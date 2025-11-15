@@ -14,6 +14,10 @@ static void appendBytes(char *buffer, size_t *offset, const void *src, const siz
   *offset += len;
 }
 
+void appendUint8(char *buffer, size_t *offset, const char value) {
+  appendBytes(buffer, offset, &value, sizeof(char));
+}
+
 void appendUint32(char *buffer, size_t *offset, const uint32_t value) {
   const uint32_t networkInt = htobe32(value);
   appendBytes(buffer, offset, &networkInt, sizeof(uint32_t));
@@ -27,6 +31,12 @@ void appendUint64(char *buffer, size_t *offset, const uint64_t value) {
 static void getBytes(const char *buffer, size_t *offset, void *dest, const size_t len) {
   memcpy(dest, buffer + *offset, len);
   *offset += len;
+}
+
+char getUint8(const char *buffer, size_t *offset) {
+  char value;
+  getBytes(buffer, offset, &value, sizeof(char));
+  return value;
 }
 
 uint32_t getUint32(const char *buffer, size_t *offset) {

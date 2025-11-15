@@ -193,7 +193,8 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
         .userID = userID,
         .recipientID = 0,
         .timestamp = timestamp,
-        .digitalSig = digitalSignature
+        .digitalSig = digitalSignature,
+        .message = "Hello from Lodi Client!"
     };
 
     if (toDomainHost(lodiDomain, (void *) &request, &lodiServerAddr) == ERROR) {
@@ -203,7 +204,7 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
 
     struct sockaddr_in receiveAddress;
 
-    LodiServerToLodiClientAcks response;
+    LodiServerMessage response;
 
     if (fromDomainHost(lodiDomain, &response, &receiveAddress) == DOMAIN_FAILURE) {
         printf("Req A. 2. c. Failed to receive login message, aborting...\n");

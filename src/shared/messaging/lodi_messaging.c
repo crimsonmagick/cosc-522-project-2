@@ -4,8 +4,6 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "messaging/lodi_messaging.h"
@@ -25,14 +23,15 @@ int serializeClientLodi(PClientToLodiServer *toSerialize, char *serialized) {
   appendUint32(serialized, &offset, toSerialize->recipientID);
   appendUint64(serialized, &offset, toSerialize->timestamp);
   appendUint64(serialized, &offset, toSerialize->digitalSig);
-
+  memcpy(serialized + offset, toSerialize->message, LODI_MESSAGE_LENGTH * sizeof(char));
   return MESSAGE_SERIALIZER_SUCCESS;
 }
 
-int serializeServerLodi(LodiServerToLodiClientAcks *toSerialize, char *serialized) {
+int serializeServerLoginLodi(LodiServerMessage *toSerialize, char *serialized) {
   size_t offset = 0;
   appendUint32(serialized, &offset, toSerialize->messageType);
   appendUint32(serialized, &offset, toSerialize->userID);
+  memcpy(serialized + offset, toSerialize->message, LODI_MESSAGE_LENGTH * sizeof(char));
 
   return MESSAGE_SERIALIZER_SUCCESS;
 }
@@ -44,14 +43,16 @@ int deserializeClientLodi(char *serialized, PClientToLodiServer *deserialized) {
   deserialized->recipientID = getUint32(serialized, &offset);
   deserialized->timestamp = getUint64(serialized, &offset);
   deserialized->digitalSig = getUint64(serialized, &offset);
+  memcpy(deserialized->message, serialized + offset, LODI_MESSAGE_LENGTH * sizeof(char));
 
   return MESSAGE_DESERIALIZER_SUCCESS;
 }
 
-int deserializeServerLodi(char *serialized, LodiServerToLodiClientAcks *deserialized) {
+int deserializeServerLoginLodi(char *serialized, LodiServerMessage *deserialized) {
   size_t offset = 0;
   deserialized->messageType = getUint32(serialized, &offset);
   deserialized->userID = getUint32(serialized, &offset);
+  memcpy(deserialized->message, serialized + offset, LODI_MESSAGE_LENGTH * sizeof(char));
 
   return MESSAGE_DESERIALIZER_SUCCESS;
 }
@@ -67,7 +68,7 @@ int initLodiClientDomain(DomainServiceHandle **handle) {
   };
   const MessageDeserializer incoming = {
     LODI_SERVER_RESPONSE_SIZE,
-    .deserializer = (int (*)(char *, void *)) deserializeServerLodi
+    .deserializer = (int (*)(char *, void *)) deserializeServerLoginLodi
   };
   const DomainServiceOpts options = {
     .localPort = 0,
@@ -88,7 +89,7 @@ int initLodiServerDomain(DomainServiceHandle **handle) {
   const ServerConfig serverConfig = getServerConfig(LODI);
   const MessageSerializer outgoing = {
     LODI_SERVER_RESPONSE_SIZE,
-    .serializer = (int (*)(void *, char *)) serializeServerLodi
+    .serializer = (int (*)(void *, char *)) serializeServerLoginLodi
   };
   const MessageDeserializer incoming = {
     LODI_CLIENT_REQUEST_SIZE,

@@ -13,8 +13,6 @@
 #include "messaging/udp.h"
 #include "shared.h"
 
-#define DEFAULT_TIMEOUT_MS 100
-
 struct DomainService {
   int sock;
   struct sockaddr_in localAddr;

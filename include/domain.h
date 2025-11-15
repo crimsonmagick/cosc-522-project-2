@@ -14,7 +14,7 @@
 #define DOMAIN_FAILURE 1
 #define DOMAIN_INIT_FAILURE 2
 
-#define DEFAULT_TIMEOUT_MS 100
+#define DEFAULT_TIMEOUT_MS 0
 
 #include <netinet/in.h>
 typedef struct DomainService DomainService;

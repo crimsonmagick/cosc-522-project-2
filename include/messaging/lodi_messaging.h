@@ -6,21 +6,34 @@
 #ifndef LODI_LODIMESSAGING_H
 #define LODI_LODIMESSAGING_H
 
-#define LODI_CLIENT_REQUEST_SIZE (3 * sizeof(uint32_t) + 2 * sizeof(uint64_t))
-#define LODI_SERVER_RESPONSE_SIZE (2 * sizeof(uint32_t))
+#define LODI_MESSAGE_LENGTH 100
+
+#define LODI_CLIENT_REQUEST_SIZE ((3 * sizeof(uint32_t) + 2 * sizeof(uint64_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
+#define LODI_SERVER_RESPONSE_SIZE ((2 * sizeof(uint32_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
 #include "domain.h"
 
-typedef struct {
-  enum { ackLogin } messageType; /* same size as an unsigned int */
-  unsigned int userID; /* user identifier */
-} LodiServerToLodiClientAcks;
+enum LodiClientMessageType {
+  login, post, feed, follow, unfollow, logout
+};
+
+enum LodiServerMessageType {
+  ackLogin, ackPost, ackFeed, ackFollow, ackUnfollow, ackLogout
+};
 
 typedef struct {
-  enum { login } messageType; /* same size as an unsigned int */
+  enum LodiServerMessageType messageType; /* same size as an unsigned int */
+  unsigned int userID; /* user identifier */
+  char message[100]; /* text message*/
+} LodiServerMessage;
+
+typedef struct {
+  enum LodiClientMessageType messageType;
+
   unsigned int userID; /* user identifier */
   unsigned int recipientID; /* message recipient identifier */
   unsigned long timestamp; /* timestamp */
   unsigned long digitalSig; /* encrypted timestamp */
+  char message[100]; /* text message*/
 } PClientToLodiServer;
 
 int initLodiClientDomain(DomainServiceHandle **handle);

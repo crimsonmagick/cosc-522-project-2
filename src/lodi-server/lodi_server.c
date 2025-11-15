@@ -112,14 +112,15 @@ int main() {
 
     printf("Req E 1. b. 1) Validated TFA successfully!\n");
 
-    LodiServerToLodiClientAcks toSendMessage = {
-      ackLogin,
-      receivedMessage.userID,
+    LodiServerMessage responseMessage = {
+      .messageType = ackLogin,
+      .userID = receivedMessage.userID,
+      .message = "Hello from Lodi Server!"
     };
 
-    const int sendSuccess = toDomainHost(lodiDomain, &toSendMessage, &clientAddress);
+    const int sendSuccess = toDomainHost(lodiDomain, &responseMessage, &clientAddress);
     if (sendSuccess == ERROR) {
-      printf("Error while sending Lodi login repsonse.\n");
+      printf("Error while sending Lodi login response.\n");
     }
   }
 }

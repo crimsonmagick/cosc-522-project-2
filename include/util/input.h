@@ -1,0 +1,4 @@
+#ifndef COSC522_LODI_INPUT_H
+#define COSC522_LODI_INPUT_H
+
+#endif
