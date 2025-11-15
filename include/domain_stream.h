@@ -20,7 +20,7 @@ typedef struct StreamDomainServiceOpts {
   char *localPort;
   int timeoutMs;
   char *remotePort;
-  char *remoteHost;
+  struct sockaddr_in remoteHost;
   MessageSerializer outgoingSerializer;
   MessageDeserializer incomingDeserializer;
   bool isServer;
@@ -30,9 +30,9 @@ int startStreamService(const StreamDomainServiceOpts options, StreamDomainServic
 
 int stopService(StreamDomainServiceHandle **handle);
 
-int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr);
+int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message);
 
-int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr);
+int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message);
 
 int changeStreamTimeout(StreamDomainServiceHandle *handle, int timeoutMs);
 

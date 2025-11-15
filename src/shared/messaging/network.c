@@ -11,8 +11,12 @@
 #include "shared.h"
 #include "messaging/network.h"
 
+#include <stdlib.h>
+
 #define TIMEOUT_SECONDS 0
 #define SOCK_FAILURE (-1)
+
+#define MAX_PENDING 10
 
 /**
  * Gets a UDP socket
@@ -75,7 +79,8 @@ struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short
  * @param clientAddress
  * @return
  */
-int receiveMessage(const int socket, char *message, const size_t messageSize, struct sockaddr_in *clientAddress) {
+int receiveDatagramMessage(const int socket, char *message, const size_t messageSize,
+                           struct sockaddr_in *clientAddress) {
   socklen_t clientAddrLen = sizeof(*clientAddress);
   const ssize_t numBytes = recvfrom(socket, message, messageSize, 0,
                                     (struct sockaddr *) clientAddress, &clientAddrLen);
@@ -106,10 +111,10 @@ int receiveMessage(const int socket, char *message, const size_t messageSize, st
  * @param destinationAddress
  * @return
  */
-int sendMessage(const int socket, const char *messageBuffer, const size_t messageSize,
-                const struct sockaddr_in *destinationAddress) {
+int sendDatagramMessage(const int socket, const char *messageBuffer, const size_t messageSize,
+                        const struct sockaddr_in *destinationAddress) {
   const ssize_t numBytes = sendto(socket, messageBuffer, messageSize, 0, (struct sockaddr *) destinationAddress,
-                                sizeof(*destinationAddress));
+                                  sizeof(*destinationAddress));
 
   if (numBytes < 0) {
     perror("sendTo() failed");
@@ -122,4 +127,69 @@ int sendMessage(const int socket, const char *messageBuffer, const size_t messag
   }
 
   return SUCCESS;
+}
+
+int streamConnect(const int sock, const struct sockaddr_in *serverAddress) {
+  if (connect(sock, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) < 0) {
+    return ERROR;
+  }
+  return SUCCESS;
+}
+
+int streamListen(const int sock) {
+  if (listen(sock, MAX_PENDING) < 0) {
+    return ERROR;
+  }
+  return SUCCESS;
+}
+
+int streamAccept(const int sock, struct sockaddr_in *clientAddress, int *clientSock) {
+  socklen_t clientLength = sizeof(clientAddress);
+  if ((*clientSock = accept(sock, (struct sockaddr *) &clientAddress, &clientLength)) < 0) {
+    return ERROR;
+  }
+  return SUCCESS;
+}
+
+int sendStreamMessage(const int socket, const char *messageBuffer, const size_t messageSize) {
+  const ssize_t numBytes = send(socket, messageBuffer, messageSize, 0);
+
+  if (numBytes < 0) {
+    perror("Stream send() failed");
+    return ERROR;
+  }
+
+  if (numBytes != (ssize_t) messageSize) {
+    perror("Stream send() sent a different number of bytes than expected");
+    return ERROR;
+  }
+
+  return SUCCESS;
+}
+
+int receiveStreamMessage(const int socket, char *message, const size_t messageSize) {
+  char *tempBuffer = malloc(messageSize);
+  size_t offset = 0;
+  ssize_t numBytes = recv(socket, tempBuffer, messageSize, 0);
+
+  while (numBytes > 0) {
+    memcpy(message + offset, tempBuffer, numBytes);
+    offset += numBytes;
+    if (numBytes != (ssize_t) messageSize) {
+      free(tempBuffer);
+      printf("Stream recv: received more bytes than expected: received %zd, expected %zd. Output is truncated.\n",
+             numBytes,
+             messageSize);
+      return ERROR;
+    }
+    numBytes = recv(socket, tempBuffer, messageSize, 0);
+  }
+
+  int ret = SUCCESS;
+  if (numBytes < 0) {
+    perror("Stream recv() failed");
+    ret = ERROR;
+  }
+  free(tempBuffer);
+  return ret;
 }

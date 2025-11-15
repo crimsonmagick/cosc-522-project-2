@@ -125,7 +125,7 @@ int toDatagramDomainHost(DomainServiceHandle *handle, void *message, struct sock
   if (service->outgoingSerializer.serializer(message, buf) == MESSAGE_SERIALIZER_FAILURE) {
     printf("Unable to serialize domain message\n");
     status = DOMAIN_FAILURE;
-  } else if (sendMessage(service->sock, buf, service->outgoingSerializer.messageSize, hostAddr) == ERROR) {
+  } else if (sendDatagramMessage(service->sock, buf, service->outgoingSerializer.messageSize, hostAddr) == ERROR) {
     printf("Unable to send message to domain\n");
     status = DOMAIN_FAILURE;
   }
@@ -151,7 +151,7 @@ int fromDatagramDomainHost(DomainServiceHandle *handle, void *message, struct so
 
   int status = DOMAIN_SUCCESS;
 
-  if (receiveMessage(service->sock, buf, service->incomingDeserializer.messageSize, hostAddr)) {
+  if (receiveDatagramMessage(service->sock, buf, service->incomingDeserializer.messageSize, hostAddr)) {
     printf("Unable to receive message from domain\n");
     status = DOMAIN_FAILURE;
   } else if (service->incomingDeserializer.deserializer(buf, message) == MESSAGE_DESERIALIZER_FAILURE) {

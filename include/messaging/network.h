@@ -15,12 +15,19 @@ int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, 
 
 struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short serverPort);
 
-int sendAndReceiveMessage(char *clientMessageIn, char *serverMessageOut, size_t messageInSize, size_t messageOutSize,
-                          char *serverIP, unsigned short serverPort);
+int receiveDatagramMessage(const int socket, char *message, const size_t messageSize, struct sockaddr_in *clientAddress);
 
-int receiveMessage(const int socket, char *message, const size_t messageSize, struct sockaddr_in *clientAddress);
-
-int sendMessage(const int socket, const char *messageBuffer, const size_t messageSize,
+int sendDatagramMessage(const int socket, const char *messageBuffer, const size_t messageSize,
                 const struct sockaddr_in *destinationAddress);
+
+int streamConnect(const int sock, const struct sockaddr_in *serverAddress);
+
+int streamListen(const int sock);
+
+int streamAccept(const int sock, struct sockaddr_in *clientAddress, int* clientSock);
+
+int sendStreamMessage(const int socket, const char *messageBuffer, const size_t messageSize);
+
+int receiveStreamMessage(const int socket, char *message, const size_t messageSize);
 
 #endif //COSC522_LODI_MESSAGING_H

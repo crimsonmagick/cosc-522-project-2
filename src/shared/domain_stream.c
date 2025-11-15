@@ -15,7 +15,10 @@
 
 struct StreamDomainService {
   int sock;
+  int clientSock;
+  int isServer;
   struct sockaddr_in localAddr;
+  struct sockaddr_in remoteAddr;
   MessageSerializer outgoingSerializer;
   MessageDeserializer incomingDeserializer;
 };
@@ -37,7 +40,7 @@ static int failInit(StreamDomainServiceHandle **handle) {
  * @param handle  The return value, the abstracted handle
  * @return DOMAIN_INIT_FAILURE or DOMAIN_SUCCESS
  */
-int streamAllocateHandle(StreamDomainServiceHandle **handle) {
+static int streamAllocateHandle(StreamDomainServiceHandle **handle) {
   *handle = malloc(sizeof(StreamDomainServiceHandle));
   if (*handle == NULL) {
     return DOMAIN_INIT_FAILURE;
@@ -76,7 +79,7 @@ int startService(const StreamDomainServiceOpts options, StreamDomainServiceHandl
     domainService->localAddr = getNetworkAddress(LOCALHOST, atoi(options.localPort));
     domainService->sock = getSocket(&domainService->localAddr, timeout, STREAM);
   } else {
-    domainService->sock = getSocket(NULL, timeout, STREAM1);
+    domainService->sock = getSocket(NULL, timeout, STREAM);
   }
   if (timeout != NULL) {
     free(timeout);
@@ -87,12 +90,25 @@ int startService(const StreamDomainServiceOpts options, StreamDomainServiceHandl
   domainService->incomingDeserializer = options.incomingDeserializer;
   domainService->outgoingSerializer = options.outgoingSerializer;
 
+  domainService->isServer = options.isServer;
   if (options.isServer) {
-
+    if (streamListen(domainService->sock) == ERROR) {
+      printf("Unable to listen for incoming messages\n");
+      return DOMAIN_FAILURE;
+    }
+    struct sockaddr_in clientAddress;
+    int clientSock;
+    if (streamAccept(domainService->sock, &clientAddress, &clientSock) == ERROR) {
+      printf("Unable to accept client connection...\n");
+      return DOMAIN_FAILURE;
+    }
+    domainService->remoteAddr = clientAddress;
+    domainService->clientSock = clientSock;
   } else {
-
+    if (streamConnect(domainService->sock, &options.remoteHost) == ERROR) {
+      return DOMAIN_FAILURE;
+    }
   }
-
   return DOMAIN_SUCCESS;
 }
 
@@ -122,20 +138,22 @@ int stopService(StreamDomainServiceHandle **handle) {
  * @param hostAddr
  * @return
  */
-int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr) {
+int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message) {
   char *buf = malloc(handle->streamDomainService->outgoingSerializer.messageSize);
   const StreamDomainService *service = handle->streamDomainService;
 
   int status = DOMAIN_SUCCESS;
+  int sock = handle->streamDomainService->isServer
+               ? handle->streamDomainService->clientSock
+               : handle->streamDomainService->sock;
 
   if (service->outgoingSerializer.serializer(message, buf) == MESSAGE_SERIALIZER_FAILURE) {
     printf("Unable to serialize domain message\n");
     status = DOMAIN_FAILURE;
-  } else if (sendMessage(service->sock, buf, service->outgoingSerializer.messageSize, hostAddr) == ERROR) {
+  } else if (sendStreamMessage(sock, buf, service->outgoingSerializer.messageSize) == ERROR) {
     printf("Unable to send message to domain\n");
     status = DOMAIN_FAILURE;
   }
-
   free(buf);
   return status;
 }
@@ -147,7 +165,7 @@ int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message, struct 
  * @param hostAddr
  * @return
  */
-int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr) {
+int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message) {
   char *buf = malloc(handle->streamDomainService->incomingDeserializer.messageSize);
   if (!buf) {
     printf("Failed to allocate message buffer\n");
@@ -157,7 +175,7 @@ int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message, struc
 
   int status = DOMAIN_SUCCESS;
 
-  if (receiveMessage(service->sock, buf, service->incomingDeserializer.messageSize, hostAddr)) {
+  if (receiveStreamMessage(service->sock, buf, service->incomingDeserializer.messageSize)) {
     printf("Unable to receive message from domain\n");
     status = DOMAIN_FAILURE;
   } else if (service->incomingDeserializer.deserializer(buf, message) == MESSAGE_DESERIALIZER_FAILURE) {
