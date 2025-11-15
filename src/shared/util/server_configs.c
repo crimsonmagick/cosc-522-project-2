@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-#include "messaging/udp.h"
+#include "messaging/network.h"
 #include "util/server_configs.h"
 
 #define LOCALHOST "127.0.0.1"

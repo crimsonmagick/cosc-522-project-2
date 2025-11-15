@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "domain_datagram.h"
-#include "messaging/udp.h"
+#include "messaging/network.h"
 #include "shared.h"
 
 struct DatagramDomainService {
@@ -74,9 +74,9 @@ int startDatagramService(const DomainServiceOpts options, DomainServiceHandle **
   }
   if (options.localPort != NULL) {
     domainService->localAddr = getNetworkAddress(LOCALHOST, atoi(options.localPort));
-    domainService->sock = getSocket(&domainService->localAddr, timeout);
+    domainService->sock = getSocket(&domainService->localAddr, timeout, DATAGRAM);
   } else {
-    domainService->sock = getSocket(NULL, timeout);
+    domainService->sock = getSocket(NULL, timeout, DATAGRAM);
   }
   if (timeout != NULL) {
     free(timeout);

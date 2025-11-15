@@ -7,7 +7,11 @@
 
 #define LOCALHOST "127.0.0.1"
 
-int getSocket(const struct sockaddr_in *address, const struct timeval *timeout);
+enum ConnectionType {
+  STREAM, DATAGRAM
+};
+
+int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, enum ConnectionType connectionType);
 
 struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short serverPort);
 

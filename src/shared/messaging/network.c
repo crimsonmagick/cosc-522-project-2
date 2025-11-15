@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #include "shared.h"
-#include "messaging/udp.h"
+#include "messaging/network.h"
 
 #define TIMEOUT_SECONDS 0
 #define SOCK_FAILURE (-1)
@@ -21,7 +21,8 @@
  * @param timeout
  * @return
  */
-int getSocket(const struct sockaddr_in *address, const struct timeval *timeout) {
+int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, enum ConnectionType connectionType) {
+  enum __socket_type sockType = connectionType == DATAGRAM ? SOCK_DGRAM : SOCK_STREAM;
   const int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (sock < 0) {
     perror("socket() failed");

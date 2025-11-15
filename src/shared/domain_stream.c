@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "domain_stream.h"
-#include "messaging/udp.h"
+#include "messaging/network.h"
 #include "shared.h"
 
 struct StreamDomainService {
@@ -74,9 +74,9 @@ int startService(const StreamDomainServiceOpts options, StreamDomainServiceHandl
   }
   if (options.localPort != NULL) {
     domainService->localAddr = getNetworkAddress(LOCALHOST, atoi(options.localPort));
-    domainService->sock = getSocket(&domainService->localAddr, timeout);
+    domainService->sock = getSocket(&domainService->localAddr, timeout, STREAM);
   } else {
-    domainService->sock = getSocket(NULL, timeout);
+    domainService->sock = getSocket(NULL, timeout, STREAM1);
   }
   if (timeout != NULL) {
     free(timeout);
@@ -86,6 +86,12 @@ int startService(const StreamDomainServiceOpts options, StreamDomainServiceHandl
   }
   domainService->incomingDeserializer = options.incomingDeserializer;
   domainService->outgoingSerializer = options.outgoingSerializer;
+
+  if (options.isServer) {
+
+  } else {
+
+  }
 
   return DOMAIN_SUCCESS;
 }
