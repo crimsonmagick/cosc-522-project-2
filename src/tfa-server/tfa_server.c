@@ -41,7 +41,7 @@ int main() {
         struct sockaddr_in clientAddress;
 
         TFAClientOrLodiServerToTFAServer receivedMessage;
-        if (fromDomainHost(tfaDomain, &receivedMessage, &clientAddress) == DOMAIN_FAILURE) {
+        if (fromDatagramDomainHost(tfaDomain, &receivedMessage, &clientAddress) == DOMAIN_FAILURE) {
             printf("Failed to handle incoming message, continuing...\n");
         }
 
@@ -68,7 +68,7 @@ int main() {
                 receivedMessage.userID,
             };
 
-            int sendSuccess = toDomainHost(tfaDomain, &registrationSuccessMessage, &clientAddress);
+            int sendSuccess = toDatagramDomainHost(tfaDomain, &registrationSuccessMessage, &clientAddress);
 
             if (sendSuccess == ERROR) {
                 printf("Error while sending message.\n");
@@ -78,7 +78,7 @@ int main() {
             printf("Req C 1. a. 2) b. (repeated) sent confirmTFA\n");
 
             // RECEIVE ACK MESSAGE OF DESTINY
-            int receivedSuccess = fromDomainHost(tfaDomain, &receivedMessage, &clientAddress);
+            int receivedSuccess = fromDatagramDomainHost(tfaDomain, &receivedMessage, &clientAddress);
 
             if (receivedSuccess == ERROR) {
                 printf("Failed to handle incoming ACK TFAClientOrLodiServerToTFAServer message.\n");
@@ -94,7 +94,7 @@ int main() {
             // REGISTER CLIENT
             addIP(receivedMessage.userID, clientAddress.sin_addr, ntohs(clientAddress.sin_port));
             printf("Registered client! Sending final TFA confirmation message! (not in reqs)\n");
-            sendSuccess = toDomainHost(tfaDomain, &registrationSuccessMessage, &clientAddress);
+            sendSuccess = toDatagramDomainHost(tfaDomain, &registrationSuccessMessage, &clientAddress);
             if (sendSuccess == ERROR) {
                 printf("Warning: error while sending final ack message for client registration.\n");
             }
@@ -119,7 +119,7 @@ int main() {
             tfaClientAddr.sin_addr = registeredAddress;
             tfaClientAddr.sin_port = htons(port);
 
-            int sendSuccess = toDomainHost(tfaDomain, &pushRequest, &tfaClientAddr);
+            int sendSuccess = toDatagramDomainHost(tfaDomain, &pushRequest, &tfaClientAddr);
             if (sendSuccess == ERROR) {
                 printf("Failed to send push auth request to TFA client, aborting...\n");
                 continue;
@@ -127,7 +127,7 @@ int main() {
             printf("Req C. 3. a. sent pushTFA message\n");
 
             TFAClientOrLodiServerToTFAServer pushResponse;
-            int receivedSuccess = fromDomainHost(tfaDomain, &pushResponse, &tfaClientAddr);
+            int receivedSuccess = fromDatagramDomainHost(tfaDomain, &pushResponse, &tfaClientAddr);
             if (receivedSuccess == ERROR) {
                 printf("Error while receiving TFA client push auth message.\n");
                 continue;
@@ -143,7 +143,7 @@ int main() {
                 responseAuth,
                 receivedMessage.userID
             };
-            sendSuccess = toDomainHost(tfaDomain, &pushNotificationResponse, &clientAddress);
+            sendSuccess = toDatagramDomainHost(tfaDomain, &pushNotificationResponse, &clientAddress);
             if (sendSuccess == ERROR) {
                 printf("Error while sending push response to Lodi server\n");
             }

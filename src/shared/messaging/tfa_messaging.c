@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "domain.h"
+#include "domain_datagram.h"
 #include "messaging/tfa_messaging.h"
 #include "shared.h"
 #include "util/buffers.h"
@@ -81,7 +81,7 @@ int initTFAClientDomain(DomainServiceHandle **handle, const bool isDuplex) {
   };
 
   DomainServiceHandle *allocatedHandle = NULL;
-  if (startService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;
@@ -106,7 +106,7 @@ int initTFAServerDomain(DomainServiceHandle **handle) {
   };
 
   DomainServiceHandle *allocatedHandle = NULL;
-  if (startService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;

@@ -78,7 +78,7 @@ int initLodiClientDomain(DomainServiceHandle **handle) {
   };
 
   DomainServiceHandle *allocatedHandle = NULL;
-  if (startService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;
@@ -103,7 +103,7 @@ int initLodiServerDomain(DomainServiceHandle **handle) {
   };
 
   DomainServiceHandle *allocatedHandle = NULL;
-  if (startService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;

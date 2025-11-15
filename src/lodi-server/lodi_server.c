@@ -37,14 +37,14 @@ int sendPushRequest(const unsigned int userID) {
     .userID = userID
   };
 
-  if (toDomainHost(tfaDomain, &requestMessage, &tfaServerAddress) == ERROR) {
+  if (toDatagramDomainHost(tfaDomain, &requestMessage, &tfaServerAddress) == ERROR) {
     printf("Unable to send push notification, aborting...\n");
     return ERROR;
   }
 
   TFAServerToLodiServer response;
   struct sockaddr_in recreceiveAddr;
-  if (fromDomainHost(tfaDomain, &response, &recreceiveAddr) == ERROR) {
+  if (fromDatagramDomainHost(tfaDomain, &response, &recreceiveAddr) == ERROR) {
     printf("Unable to receive push notification response, aborting...\n");
     return ERROR;
   }
@@ -69,7 +69,7 @@ int main() {
   while (true) {
     struct sockaddr_in clientAddress;
     PClientToLodiServer receivedMessage;
-    int receivedSuccess = fromDomainHost(lodiDomain, &receivedMessage, &clientAddress);
+    int receivedSuccess = fromDatagramDomainHost(lodiDomain, &receivedMessage, &clientAddress);
 
     if (receivedSuccess == ERROR) {
       printf("Failed to handle incoming PClientToLodiServer message.\n");
@@ -118,7 +118,7 @@ int main() {
       .message = "Hello from Lodi Server!"
     };
 
-    const int sendSuccess = toDomainHost(lodiDomain, &responseMessage, &clientAddress);
+    const int sendSuccess = toDatagramDomainHost(lodiDomain, &responseMessage, &clientAddress);
     if (sendSuccess == ERROR) {
       printf("Error while sending Lodi login response.\n");
     }

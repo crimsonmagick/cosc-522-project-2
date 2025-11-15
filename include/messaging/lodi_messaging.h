@@ -10,7 +10,7 @@
 
 #define LODI_CLIENT_REQUEST_SIZE ((3 * sizeof(uint32_t) + 2 * sizeof(uint64_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
 #define LODI_SERVER_RESPONSE_SIZE ((2 * sizeof(uint32_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
-#include "domain.h"
+#include "domain_datagram.h"
 
 enum LodiClientMessageType {
   login, post, feed, follow, unfollow, logout

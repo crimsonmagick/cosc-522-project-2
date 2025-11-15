@@ -13,7 +13,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include "domain.h"
+#include "domain_datagram.h"
 #include "messaging/tfa_messaging.h"
 #include "shared.h"
 #include "util/rsa.h"
@@ -97,8 +97,8 @@ void handleTFAPush() {
 
         TFAServerToTFAClient pushRequest;
 
-        changeTimeout(tfaClientDomain, 0); // block
-        int receivedSuccess = fromDomainHost(tfaClientDomain, &pushRequest, &clientAddress);
+        changeDatagramTimeout(tfaClientDomain, 0); // block
+        int receivedSuccess = fromDatagramDomainHost(tfaClientDomain, &pushRequest, &clientAddress);
 
         if (receivedSuccess == ERROR) {
             printf("Failed to handle incoming TFAClientOrLodiServerToTFAServer message.\n");
@@ -116,9 +116,9 @@ void handleTFAPush() {
             .timestamp = 0,
             .digitalSig = 0
         };
-        changeTimeout(tfaClientDomain, DEFAULT_TIMEOUT_MS); // timeout on send
+        changeDatagramTimeout(tfaClientDomain, DEFAULT_TIMEOUT_MS); // timeout on send
 
-        int sendStatus = toDomainHost(tfaClientDomain, &toSendMessage, &tfaServerAddr);
+        int sendStatus = toDatagramDomainHost(tfaClientDomain, &toSendMessage, &tfaServerAddr);
 
         if (sendStatus == ERROR) {
             printf("Error while sending push ack.\n");
@@ -145,7 +145,7 @@ int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsign
         .digitalSig = digitalSignature
     };
 
-    int sendStatus = toDomainHost(tfaClientDomain, &requestMessage, &tfaServerAddr);
+    int sendStatus = toDatagramDomainHost(tfaClientDomain, &requestMessage, &tfaServerAddr);
 
     if (sendStatus == DOMAIN_FAILURE) {
         printf("Failed to send registration, aborting registration...\n");
@@ -156,7 +156,7 @@ int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsign
 
     TFAServerToTFAClient response;
     struct sockaddr_in clientAddr;
-    int receiveStatus = fromDomainHost(tfaClientDomain, &response, &clientAddr);
+    int receiveStatus = fromDatagramDomainHost(tfaClientDomain, &response, &clientAddr);
     if (receiveStatus == DOMAIN_FAILURE) {
         printf("Failed to receive registration, aborting registration...\n");
         return ERROR;
@@ -166,14 +166,14 @@ int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsign
 
     // AS PER REQUIREMENTS, SEND CONFIRMATION AGAIN
     requestMessage.messageType = ackRegTFA;
-    sendStatus = toDomainHost(tfaClientDomain, &requestMessage, &tfaServerAddr);
+    sendStatus = toDatagramDomainHost(tfaClientDomain, &requestMessage, &tfaServerAddr);
     if (sendStatus == ERROR) {
         printf("Key registration failed while sending ack...\n");
         return ERROR;
     }
     printf("Req B. 1. d. Key registration ack sent successful!\n");
 
-    receiveStatus = fromDomainHost(tfaClientDomain, &response, &clientAddr);
+    receiveStatus = fromDatagramDomainHost(tfaClientDomain, &response, &clientAddr);
     if (receiveStatus == DOMAIN_FAILURE) {
         printf("Failed to receive final registration confirmation, aborting registration...\n");
         return ERROR;

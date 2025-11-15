@@ -10,7 +10,7 @@
 
 #include "messaging/pke_messaging.h"
 
-#include "domain.h"
+#include "domain_datagram.h"
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
@@ -31,14 +31,14 @@ int getPublicKey(DomainServiceHandle *handle, struct sockaddr_in *pkeAddr, const
     userID
   };
 
-  if (toDomainHost(handle, (void *) &requestMessage, pkeAddr) == DOMAIN_FAILURE) {
+  if (toDatagramDomainHost(handle, (void *) &requestMessage, pkeAddr) == DOMAIN_FAILURE) {
     printf("Unable to get public key, aborting ...\n");
     return ERROR;
   }
 
   PKServerToLodiClient responseMessage;
   struct sockaddr_in receivedAddr;
-  if (fromDomainHost(handle, &responseMessage, &receivedAddr) == DOMAIN_FAILURE) {
+  if (fromDatagramDomainHost(handle, &responseMessage, &receivedAddr) == DOMAIN_FAILURE) {
     printf("Failed to receive public key, aborting ...\n");
     return ERROR;
   }
@@ -107,7 +107,7 @@ int initPKEClientDomain(DomainServiceHandle **handle) {
   };
 
   DomainServiceHandle *allocatedHandle = NULL;
-  if (startService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;
@@ -136,7 +136,7 @@ int initPKEServerDomain(DomainServiceHandle **handle) {
   };
 
   DomainServiceHandle *allocatedHandle = NULL;
-  if (startService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;

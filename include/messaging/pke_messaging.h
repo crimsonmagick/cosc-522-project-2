@@ -8,7 +8,7 @@
 
 #define PK_CLIENT_REQUEST_SIZE (3 * sizeof(uint32_t))
 #define PK_SERVER_RESPONSE_SIZE (3 * sizeof(uint32_t))
-#include "domain.h"
+#include "domain_datagram.h"
 #include <netinet/in.h>
 
 typedef struct {

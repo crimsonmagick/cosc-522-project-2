@@ -25,7 +25,7 @@ int main() {
   while (true) {
     struct sockaddr_in clientAddress;
     PKServerToLodiClient receivedMessage;
-    const int receivedSuccess = fromDomainHost(pkeDomain, &receivedMessage, &clientAddress);
+    const int receivedSuccess = fromDatagramDomainHost(pkeDomain, &receivedMessage, &clientAddress);
 
     if (receivedSuccess == ERROR) {
       printf("Failed to handle incoming PClientToPKServer message.\n");
@@ -55,7 +55,7 @@ int main() {
       printf("Warning: Received message with unknown message type.\n");
     }
 
-    const int sendSuccess = toDomainHost(pkeDomain, &responseMessage, &clientAddress);
+    const int sendSuccess = toDatagramDomainHost(pkeDomain, &responseMessage, &clientAddress);
     if (sendSuccess == ERROR) {
       printf("Error while sending message.\n");
     } else {

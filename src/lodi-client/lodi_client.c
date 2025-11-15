@@ -159,7 +159,7 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
         publicKey
     };
 
-    if (toDomainHost(pkeDomain, (void *) &requestMessage, &pkServerAddr) == DOMAIN_FAILURE) {
+    if (toDatagramDomainHost(pkeDomain, (void *) &requestMessage, &pkServerAddr) == DOMAIN_FAILURE) {
         printf("Unable to send registration, aborting ...\n");
         return ERROR;
     }
@@ -168,7 +168,7 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
     PKServerToLodiClient responseMessage;
 
     struct sockaddr_in receiveAddress;
-    if (fromDomainHost(pkeDomain, &responseMessage, &receiveAddress) == DOMAIN_FAILURE) {
+    if (fromDatagramDomainHost(pkeDomain, &responseMessage, &receiveAddress) == DOMAIN_FAILURE) {
         printf("Failed to receive registration confirmation, aborting ...\n");
         return ERROR;
     }
@@ -197,7 +197,7 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
         .message = "Hello from Lodi Client!"
     };
 
-    if (toDomainHost(lodiDomain, (void *) &request, &lodiServerAddr) == ERROR) {
+    if (toDatagramDomainHost(lodiDomain, (void *) &request, &lodiServerAddr) == ERROR) {
         printf("Req A. c. Failed to send login message, aborting...\n");
         return ERROR;
     }
@@ -206,7 +206,7 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
 
     LodiServerMessage response;
 
-    if (fromDomainHost(lodiDomain, &response, &receiveAddress) == DOMAIN_FAILURE) {
+    if (fromDatagramDomainHost(lodiDomain, &response, &receiveAddress) == DOMAIN_FAILURE) {
         printf("Req A. 2. c. Failed to receive login message, aborting...\n");
         return ERROR;
     }
