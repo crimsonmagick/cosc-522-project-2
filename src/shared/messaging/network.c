@@ -16,12 +16,11 @@
 #include <stdlib.h>
 
 #define TIMEOUT_SECONDS 0
-#define SOCK_FAILURE (-1)
 
 #define MAX_PENDING 10
 
 /**
- * Gets a UDP socket
+ * Gets a socket
  *
  * @param address
  * @param timeout
@@ -34,22 +33,27 @@ int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, 
   const int sock = socket(AF_INET, sockType, protocol);
   if (sock < 0) {
     perror("socket() failed");
-    return SOCK_FAILURE;
+    return ERROR;
   }
 
-  // if (timeout) {
-  //   const int optResult = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
-  //   if (optResult < 0) {
-  //     perror("Unable to set socket options");
-  //     close(sock);
-  //     return SOCK_FAILURE;
-  //   }
-  // }
+  if (connectionType == STREAM) {
+    int opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+  }
+
+  if (timeout) {
+    const int optResult = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
+    if (optResult < 0) {
+      perror("Unable to set socket options");
+      close(sock);
+      return ERROR;
+    }
+  }
 
   if (address && bind(sock, (struct sockaddr *) address, sizeof(*address)) < 0) {
     perror("bind() failed");
     close(sock);
-    return SOCK_FAILURE;
+    return ERROR;
   }
 
   return sock;

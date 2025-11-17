@@ -29,20 +29,20 @@ typedef struct {
  * Constructor functions
  */
 
-int initPKEClientDomain(DatagramDomainServiceHandle **handle);
+int initPKEClientDomain(DatagramDomainService **service);
 
-int initPKEServerDomain(DatagramDomainServiceHandle **handle);
+int initPKEServerDomain(DatagramDomainService **service);
 
 /**
  * Gets the public key for a user for the PKE Server
  *
- * @param handle Domain Service to use to retrieve public key
+ * @param service Domain Service to use to retrieve public key
  * @param pkeAddr Domain Service address
  * @param userID user to retrieve for
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
  */
-int getPublicKey(DatagramDomainServiceHandle * handle, struct sockaddr_in *pkeAddr, const unsigned int userID,
-  unsigned int *publicKey);
+int getPublicKey(DatagramDomainService *service, struct sockaddr_in *pkeAddr, const unsigned int userID,
+                 unsigned int *publicKey);
 
 #endif

@@ -11,7 +11,6 @@
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
-#include "domain_datagram.h"
 #include "domain_stream.h"
 
 /*

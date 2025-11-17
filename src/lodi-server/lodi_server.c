@@ -19,11 +19,11 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DatagramDomainServiceHandle *pkeDomain = NULL;
+static DatagramDomainService *pkeDomain = NULL;
 static struct sockaddr_in pkServerAddress;
 static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in lodiServerAddress;
-static DatagramDomainServiceHandle *tfaDomain = NULL;
+static DatagramDomainService *tfaDomain = NULL;
 static struct sockaddr_in tfaServerAddress;
 
 /**
@@ -37,7 +37,7 @@ int sendPushRequest(const unsigned int userID) {
     .userID = userID
   };
 
-  if (toDatagramDomainHost(tfaDomain, &requestMessage, &tfaServerAddress) == ERROR) {
+  if (toDatagramDomainHost(tfaDomain, (void *) &requestMessage, &tfaServerAddress) == ERROR) {
     printf("Unable to send push notification, aborting...\n");
     return ERROR;
   }
@@ -70,15 +70,13 @@ int main() {
   tfaServerAddress = getServerAddr(TFA);
 
   while (true) {
-    struct sockaddr_in clientAddress;
     PClientToLodiServer receivedMessage;
-    int receivedSuccess = fromStreamDomainHost(lodiDomain, &receivedMessage);
+    const int receivedSuccess = fromStreamDomainHost(lodiDomain, &receivedMessage);
 
     if (receivedSuccess == DOMAIN_FAILURE) {
       printf("Failed to handle incoming PClientToLodiServer message.\n");
       stopStreamService(&lodiDomain);
       exit(-1);
-      continue;
     }
     printf("Req E. 1. Received login message from Lodi client\n");
 

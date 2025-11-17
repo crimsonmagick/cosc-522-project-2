@@ -11,11 +11,6 @@
 
 typedef struct DatagramDomainService DatagramDomainService;
 
-typedef struct DatagramDomainServiceHandle {
-  DatagramDomainService *domainService;
-} DatagramDomainServiceHandle;
-
-
 typedef struct DatagramDomainServiceOpts {
   char *localPort;
   int timeoutMs;
@@ -23,15 +18,15 @@ typedef struct DatagramDomainServiceOpts {
   MessageDeserializer incomingDeserializer;
 } DomainServiceOpts;
 
-int startDatagramService(const DomainServiceOpts options, DatagramDomainServiceHandle **handle);
+int startDatagramService(const DomainServiceOpts options, DatagramDomainService **service);
 
-int stopDatagramService(DatagramDomainServiceHandle **handle);
+int stopDatagramService(DatagramDomainService **service);
 
-int toDatagramDomainHost(DatagramDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr);
+int toDatagramDomainHost(DatagramDomainService *service, void *message, struct sockaddr_in *hostAddr);
 
-int fromDatagramDomainHost(DatagramDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr);
+int fromDatagramDomainHost(DatagramDomainService *service, void *message, struct sockaddr_in *hostAddr);
 
-int changeDatagramTimeout(DatagramDomainServiceHandle *handle, int timeoutMs);
+int changeDatagramTimeout(DatagramDomainService *service, int timeoutMs);
 
 
 

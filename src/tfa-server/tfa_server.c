@@ -19,8 +19,8 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DatagramDomainServiceHandle *pkeDomain = NULL;
-static DatagramDomainServiceHandle *tfaDomain = NULL;
+static DatagramDomainService *pkeDomain = NULL;
+static DatagramDomainService *tfaDomain = NULL;
 static struct sockaddr_in pkServerAddr;
 
 
@@ -113,8 +113,7 @@ int main() {
             };
 
             // FIXME we shouldn't be doing pure UDP stuff here...
-            struct sockaddr_in tfaClientAddr;
-            memset(&tfaClientAddr, 0, sizeof(tfaClientAddr));
+            struct sockaddr_in tfaClientAddr = {0};
             tfaClientAddr.sin_family = AF_INET;
             tfaClientAddr.sin_addr = registeredAddress;
             tfaClientAddr.sin_port = htons(port);

@@ -16,7 +16,7 @@
 #include "key_repository.h"
 #include "shared.h"
 
-static DatagramDomainServiceHandle *pkeDomain = NULL;
+static DatagramDomainService *pkeDomain = NULL;
 
 int main() {
   initPKEServerDomain(&pkeDomain);

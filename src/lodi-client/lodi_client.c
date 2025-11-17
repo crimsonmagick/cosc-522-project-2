@@ -22,7 +22,7 @@
 #define LOGIN_OPTION 2
 #define QUIT_OPTION 3
 
-static DatagramDomainServiceHandle *pkeDomain = NULL;
+static DatagramDomainService *pkeDomain = NULL;
 static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in pkServerAddr;
 static struct sockaddr_in lodiServerAddr;
