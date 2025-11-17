@@ -33,7 +33,7 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
 
 void handleTFAPush();
 
-static DatagramDomainService *tfaClientDomain = NULL;
+static DomainService *tfaClientDomain = NULL;
 static struct sockaddr_in tfaServerAddr;
 
 /**

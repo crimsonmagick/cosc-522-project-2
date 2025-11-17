@@ -28,8 +28,8 @@ typedef struct {
   unsigned int userID; /* user's identifier or requested user identifier*/
 } TFAServerToLodiServer;
 
-int initTFAClientDomain(DatagramDomainService **service, const bool isDuplex);
+int initTFAClientDomain(DomainService **service, const bool isDuplex);
 
-int initTFAServerDomain(DatagramDomainService **service);
+int initTFAServerDomain(DomainService **service);
 
 #endif

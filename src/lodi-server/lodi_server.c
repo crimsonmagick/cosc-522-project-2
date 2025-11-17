@@ -19,11 +19,11 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DatagramDomainService *pkeDomain = NULL;
+static DomainService *pkeDomain = NULL;
 static struct sockaddr_in pkServerAddress;
 static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in lodiServerAddress;
-static DatagramDomainService *tfaDomain = NULL;
+static DomainService *tfaDomain = NULL;
 static struct sockaddr_in tfaServerAddress;
 
 /**

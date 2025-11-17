@@ -59,7 +59,7 @@ int deserializeServerTFA(char *serialized, TFAServerToLodiServer *deserialized) 
  * Boilerplate DomainService constructor functions
  */
 
-int initTFAClientDomain(DatagramDomainService **service, const bool isDuplex) {
+int initTFAClientDomain(DomainService **service, const bool isDuplex) {
   const MessageSerializer outgoing = {
     TFA_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *))serializeClientTFA
@@ -80,7 +80,7 @@ int initTFAClientDomain(DatagramDomainService **service, const bool isDuplex) {
     .incomingDeserializer = incoming
   };
 
-  DatagramDomainService *allocatedService = NULL;
+  DomainService *allocatedService = NULL;
   if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
     return ERROR;
   }
@@ -88,7 +88,7 @@ int initTFAClientDomain(DatagramDomainService **service, const bool isDuplex) {
   return SUCCESS;
 }
 
-int initTFAServerDomain(DatagramDomainService **service) {
+int initTFAServerDomain(DomainService **service) {
   const ServerConfig serverConfig = getServerConfig(TFA);
   const MessageSerializer outgoing = {
     TFA_SERVER_RESPONSE_SIZE,
@@ -105,7 +105,7 @@ int initTFAServerDomain(DatagramDomainService **service) {
     .incomingDeserializer = incoming
   };
 
-  DatagramDomainService *allocatedService = NULL;
+  DomainService *allocatedService = NULL;
   if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
     return ERROR;
   }

@@ -24,7 +24,7 @@
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
  */
-int getPublicKey(DatagramDomainService *service, struct sockaddr_in *pkeAddr, const unsigned int userID,
+int getPublicKey(DomainService *service, struct sockaddr_in *pkeAddr, const unsigned int userID,
                  unsigned int *publicKey) {
   const PClientToPKServer requestMessage = {
     .messageType = requestKey,
@@ -90,7 +90,7 @@ int deserializeServerPK(char *serialized, PKServerToLodiClient *deserialized) {
   return MESSAGE_DESERIALIZER_SUCCESS;
 }
 
-int initPKEClientDomain(DatagramDomainService **service) {
+int initPKEClientDomain(DomainService **service) {
   const MessageSerializer outgoing = {
     PK_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *)) serializeClientPK
@@ -106,7 +106,7 @@ int initPKEClientDomain(DatagramDomainService **service) {
     .incomingDeserializer = incoming
   };
 
-  DatagramDomainService *allocatedService = NULL;
+  DomainService *allocatedService = NULL;
   if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
     return ERROR;
   }
@@ -118,7 +118,7 @@ int initPKEClientDomain(DatagramDomainService **service) {
  * Boilerplate DomainService constructor functions
  */
 
-int initPKEServerDomain(DatagramDomainService **service) {
+int initPKEServerDomain(DomainService **service) {
   const ServerConfig serverConfig = getServerConfig(PK);
   const MessageSerializer outgoing = {
     PK_SERVER_RESPONSE_SIZE,
@@ -135,7 +135,7 @@ int initPKEServerDomain(DatagramDomainService **service) {
     .incomingDeserializer = incoming
   };
 
-  DatagramDomainService *allocatedService = NULL;
+  DomainService *allocatedService = NULL;
   if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
     return ERROR;
   }

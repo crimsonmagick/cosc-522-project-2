@@ -9,24 +9,48 @@
 #include <netinet/in.h>
 #include "domain.h"
 
-typedef struct DatagramDomainService DatagramDomainService;
-
-typedef struct DatagramDomainServiceOpts {
+typedef struct DomainServiceOpts {
   char *localPort;
   int timeoutMs;
   MessageSerializer outgoingSerializer;
   MessageDeserializer incomingDeserializer;
 } DomainServiceOpts;
 
-int startDatagramService(const DomainServiceOpts options, DatagramDomainService **service);
+typedef struct DomainService {
+  int sock;
+  struct sockaddr_in localAddr;
+  MessageSerializer outgoingSerializer;
+  MessageDeserializer incomingDeserializer;
+  int (*start)();
+  int (*stop)();
+} DomainService;
 
-int stopDatagramService(DatagramDomainService **service);
+typedef struct DomainClient {
+  DomainService base;
+  int (*send)(void *);
+  int (*recv)(void *);
+} DomainClient;
 
-int toDatagramDomainHost(DatagramDomainService *service, void *message, struct sockaddr_in *hostAddr);
+typedef struct DomainHandle {
+  struct sockaddr_in host;
+} DomainHandle;
 
-int fromDatagramDomainHost(DatagramDomainService *service, void *message, struct sockaddr_in *hostAddr);
+typedef struct DomainServer {
+  DomainService base;
+  int (*send)(void *, DomainHandle *);
+  int (*recv)(void *, DomainHandle *);
 
-int changeDatagramTimeout(DatagramDomainService *service, int timeoutMs);
+} DomainServer;
+
+int startDatagramService(const DomainServiceOpts options, DomainService **service);
+
+int stopDatagramService(DomainService **service);
+
+int toDatagramDomainHost(DomainService *service, void *message, struct sockaddr_in *hostAddr);
+
+int fromDatagramDomainHost(DomainService *service, void *message, struct sockaddr_in *hostAddr);
+
+int changeDatagramTimeout(DomainService *service, int timeoutMs);
 
 
 
