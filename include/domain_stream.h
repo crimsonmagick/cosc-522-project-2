@@ -26,9 +26,9 @@ typedef struct StreamDomainServiceOpts {
   bool isServer;
 } StreamDomainServiceOpts;
 
-int startStreamService(const StreamDomainServiceOpts options, StreamDomainServiceOpts **handle);
+int startStreamService(const StreamDomainServiceOpts options, StreamDomainServiceHandle **handle);
 
-int stopService(StreamDomainServiceHandle **handle);
+int stopStreamService(StreamDomainServiceHandle **handle);
 
 int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message);
 

@@ -11,6 +11,8 @@
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
+#include "domain_datagram.h"
+#include "domain_stream.h"
 
 /*
  * Boilerplate serdes functions
@@ -61,7 +63,7 @@ int deserializeServerLoginLodi(char *serialized, LodiServerMessage *deserialized
  * Boilerplate DomainService constructor functions
  */
 
-int initLodiClientDomain(DomainServiceHandle **handle) {
+int initLodiClientDomain(StreamDomainServiceHandle **handle) {
   const MessageSerializer outgoing = {
     LODI_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *)) serializeClientLodi
@@ -70,22 +72,29 @@ int initLodiClientDomain(DomainServiceHandle **handle) {
     LODI_SERVER_RESPONSE_SIZE,
     .deserializer = (int (*)(char *, void *)) deserializeServerLoginLodi
   };
-  const DomainServiceOpts options = {
+
+  char * remotePort = getServerConfig(LODI).port;
+  struct sockaddr_in remote = getServerAddr(LODI);
+
+  const StreamDomainServiceOpts options = {
     .localPort = 0,
     .timeoutMs = DEFAULT_TIMEOUT_MS,
+    .remotePort = remotePort,
+    .remoteHost = remote,
     .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming
+    .incomingDeserializer = incoming,
+    .isServer = false
   };
 
-  DomainServiceHandle *allocatedHandle = NULL;
-  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  StreamDomainServiceHandle *allocatedHandle = NULL;
+  if (startStreamService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;
   return SUCCESS;
 }
 
-int initLodiServerDomain(DomainServiceHandle **handle) {
+int initLodiServerDomain(StreamDomainServiceHandle **handle) {
   const ServerConfig serverConfig = getServerConfig(LODI);
   const MessageSerializer outgoing = {
     LODI_SERVER_RESPONSE_SIZE,
@@ -95,15 +104,17 @@ int initLodiServerDomain(DomainServiceHandle **handle) {
     LODI_CLIENT_REQUEST_SIZE,
     .deserializer = (int (*)(char *, void *)) deserializeClientLodi
   };
-  const DomainServiceOpts options = {
+
+  const StreamDomainServiceOpts options = {
     .localPort = serverConfig.port,
-    .timeoutMs = 0,
+    .timeoutMs = 1000 * 60 * 10,
     .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming
+    .incomingDeserializer = incoming,
+    .isServer = true
   };
 
-  DomainServiceHandle *allocatedHandle = NULL;
-  if (startDatagramService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  StreamDomainServiceHandle *allocatedHandle = NULL;
+  if (startStreamService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
     return ERROR;
   }
   *handle = allocatedHandle;

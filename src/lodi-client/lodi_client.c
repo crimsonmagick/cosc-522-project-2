@@ -22,8 +22,8 @@
 #define LOGIN_OPTION 2
 #define QUIT_OPTION 3
 
-static DomainServiceHandle *pkeDomain = NULL;
-static DomainServiceHandle *lodiDomain = NULL;
+static DatagramDomainServiceHandle *pkeDomain = NULL;
+static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in pkServerAddr;
 static struct sockaddr_in lodiServerAddr;
 
@@ -43,7 +43,10 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
 int main() {
     // initialize domains
     initPKEClientDomain(&pkeDomain);
-    initLodiClientDomain(&lodiDomain);
+    if (initLodiClientDomain(&lodiDomain) == DOMAIN_FAILURE) {
+        printf("Failed to initialize Lodi Client Domain!\n");
+        exit(-1);
+    }
     pkServerAddr = getServerAddr(PK);
     lodiServerAddr = getServerAddr(LODI);
 
@@ -197,16 +200,14 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
         .message = "Hello from Lodi Client!"
     };
 
-    if (toDatagramDomainHost(lodiDomain, (void *) &request, &lodiServerAddr) == ERROR) {
+    if (toStreamDomainHost(lodiDomain, (void *) &request) == ERROR) {
         printf("Req A. c. Failed to send login message, aborting...\n");
         return ERROR;
     }
 
-    struct sockaddr_in receiveAddress;
-
     LodiServerMessage response;
 
-    if (fromDatagramDomainHost(lodiDomain, &response, &receiveAddress) == DOMAIN_FAILURE) {
+    if (fromStreamDomainHost(lodiDomain, &response) == DOMAIN_FAILURE) {
         printf("Req A. 2. c. Failed to receive login message, aborting...\n");
         return ERROR;
     }

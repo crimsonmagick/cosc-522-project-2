@@ -19,11 +19,11 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DomainServiceHandle *pkeDomain = NULL;
+static DatagramDomainServiceHandle *pkeDomain = NULL;
 static struct sockaddr_in pkServerAddress;
-static DomainServiceHandle *lodiDomain = NULL;
+static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in lodiServerAddress;
-static DomainServiceHandle *tfaDomain = NULL;
+static DatagramDomainServiceHandle *tfaDomain = NULL;
 static struct sockaddr_in tfaServerAddress;
 
 /**
@@ -43,8 +43,8 @@ int sendPushRequest(const unsigned int userID) {
   }
 
   TFAServerToLodiServer response;
-  struct sockaddr_in recreceiveAddr;
-  if (fromDatagramDomainHost(tfaDomain, &response, &recreceiveAddr) == ERROR) {
+  struct sockaddr_in receiveAddr;
+  if (fromDatagramDomainHost(tfaDomain, &response, &receiveAddr) == ERROR) {
     printf("Unable to receive push notification response, aborting...\n");
     return ERROR;
   }
@@ -60,7 +60,10 @@ int sendPushRequest(const unsigned int userID) {
  */
 int main() {
   initPKEClientDomain(&pkeDomain);
-  initLodiServerDomain(&lodiDomain);
+  if (initLodiServerDomain(&lodiDomain) == ERROR) {
+    printf("Failed to initialize Lodi Server Domain!\n");
+    exit(-1);
+  }
   initTFAClientDomain(&tfaDomain, false);
   pkServerAddress = getServerAddr(PK);
   lodiServerAddress = getServerAddr(LODI);
@@ -69,10 +72,12 @@ int main() {
   while (true) {
     struct sockaddr_in clientAddress;
     PClientToLodiServer receivedMessage;
-    int receivedSuccess = fromDatagramDomainHost(lodiDomain, &receivedMessage, &clientAddress);
+    int receivedSuccess = fromStreamDomainHost(lodiDomain, &receivedMessage);
 
-    if (receivedSuccess == ERROR) {
+    if (receivedSuccess == DOMAIN_FAILURE) {
       printf("Failed to handle incoming PClientToLodiServer message.\n");
+      stopStreamService(&lodiDomain);
+      exit(-1);
       continue;
     }
     printf("Req E. 1. Received login message from Lodi client\n");
@@ -118,7 +123,7 @@ int main() {
       .message = "Hello from Lodi Server!"
     };
 
-    const int sendSuccess = toDatagramDomainHost(lodiDomain, &responseMessage, &clientAddress);
+    const int sendSuccess = toStreamDomainHost(lodiDomain, &responseMessage);
     if (sendSuccess == ERROR) {
       printf("Error while sending Lodi login response.\n");
     }

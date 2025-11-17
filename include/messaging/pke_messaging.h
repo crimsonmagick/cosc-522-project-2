@@ -29,9 +29,9 @@ typedef struct {
  * Constructor functions
  */
 
-int initPKEClientDomain(DomainServiceHandle **handle);
+int initPKEClientDomain(DatagramDomainServiceHandle **handle);
 
-int initPKEServerDomain(DomainServiceHandle **handle);
+int initPKEServerDomain(DatagramDomainServiceHandle **handle);
 
 /**
  * Gets the public key for a user for the PKE Server
@@ -42,7 +42,7 @@ int initPKEServerDomain(DomainServiceHandle **handle);
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
  */
-int getPublicKey(DomainServiceHandle * handle, struct sockaddr_in *pkeAddr, const unsigned int userID,
+int getPublicKey(DatagramDomainServiceHandle * handle, struct sockaddr_in *pkeAddr, const unsigned int userID,
   unsigned int *publicKey);
 
 #endif

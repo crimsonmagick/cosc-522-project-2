@@ -25,7 +25,7 @@ struct DatagramDomainService {
  * @param handle a non-null handle, with *handle and (*handle)->domainService non-null as well
  * @return DOMAIN_INIT_FAILURE value
  */
-int failInit(DomainServiceHandle **handle) {
+int failInit(DatagramDomainServiceHandle **handle) {
   free((*handle)->domainService);
   free(*handle);
   *handle = NULL;
@@ -37,8 +37,8 @@ int failInit(DomainServiceHandle **handle) {
  * @param handle  The return value, the abstracted handle
  * @return DOMAIN_INIT_FAILURE or DOMAIN_SUCCESS
  */
-int allocateHandle(DomainServiceHandle **handle) {
-  *handle = malloc(sizeof(DomainServiceHandle));
+int allocateHandle(DatagramDomainServiceHandle **handle) {
+  *handle = malloc(sizeof(DatagramDomainServiceHandle));
   if (*handle == NULL) {
     return DOMAIN_INIT_FAILURE;
   }
@@ -59,7 +59,7 @@ int allocateHandle(DomainServiceHandle **handle) {
  * @param handle
  * @return
  */
-int startDatagramService(const DomainServiceOpts options, DomainServiceHandle **handle) {
+int startDatagramService(const DomainServiceOpts options, DatagramDomainServiceHandle **handle) {
   if (allocateHandle(handle) == DOMAIN_INIT_FAILURE) {
     return DOMAIN_INIT_FAILURE;
   }
@@ -95,7 +95,7 @@ int startDatagramService(const DomainServiceOpts options, DomainServiceHandle **
  * @param handle
  * @return
  */
-int stopDatagramService(DomainServiceHandle **handle) {
+int stopDatagramService(DatagramDomainServiceHandle **handle) {
   if (handle != NULL && *handle != NULL && (*handle)->domainService != NULL) {
     if ((*handle)->domainService->sock >= 0) {
       close((*handle)->domainService->sock);
@@ -116,7 +116,7 @@ int stopDatagramService(DomainServiceHandle **handle) {
  * @param hostAddr
  * @return
  */
-int toDatagramDomainHost(DomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr) {
+int toDatagramDomainHost(DatagramDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr) {
   char *buf = malloc(handle->domainService->outgoingSerializer.messageSize);
   const DatagramDomainService *service = handle->domainService;
 
@@ -141,7 +141,7 @@ int toDatagramDomainHost(DomainServiceHandle *handle, void *message, struct sock
  * @param hostAddr
  * @return
  */
-int fromDatagramDomainHost(DomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr) {
+int fromDatagramDomainHost(DatagramDomainServiceHandle *handle, void *message, struct sockaddr_in *hostAddr) {
   char *buf = malloc(handle->domainService->incomingDeserializer.messageSize);
   if (!buf) {
     printf("Failed to allocate message buffer\n");
@@ -168,7 +168,7 @@ int fromDatagramDomainHost(DomainServiceHandle *handle, void *message, struct so
  * @param timeoutMs
  * @return
  */
-int changeDatagramTimeout(DomainServiceHandle *handle, int timeoutMs) {
+int changeDatagramTimeout(DatagramDomainServiceHandle *handle, int timeoutMs) {
   struct timeval timeout;
 
   if (timeoutMs > 0) {

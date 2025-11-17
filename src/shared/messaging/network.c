@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+
 
 #include "shared.h"
 #include "messaging/network.h"
@@ -27,20 +29,22 @@
  */
 int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, enum ConnectionType connectionType) {
   enum __socket_type sockType = connectionType == DATAGRAM ? SOCK_DGRAM : SOCK_STREAM;
-  const int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  int protocol = connectionType == DATAGRAM ? IPPROTO_UDP : IPPROTO_TCP;
+
+  const int sock = socket(AF_INET, sockType, protocol);
   if (sock < 0) {
     perror("socket() failed");
     return SOCK_FAILURE;
   }
 
-  if (timeout) {
-    const int optResult = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
-    if (optResult < 0) {
-      perror("Unable to set socket options");
-      close(sock);
-      return SOCK_FAILURE;
-    }
-  }
+  // if (timeout) {
+  //   const int optResult = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
+  //   if (optResult < 0) {
+  //     perror("Unable to set socket options");
+  //     close(sock);
+  //     return SOCK_FAILURE;
+  //   }
+  // }
 
   if (address && bind(sock, (struct sockaddr *) address, sizeof(*address)) < 0) {
     perror("bind() failed");
@@ -130,24 +134,34 @@ int sendDatagramMessage(const int socket, const char *messageBuffer, const size_
 }
 
 int streamConnect(const int sock, const struct sockaddr_in *serverAddress) {
-  if (connect(sock, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) < 0) {
+  if (connect(sock, (struct sockaddr *) serverAddress, sizeof(struct sockaddr_in)) < 0) {
+    printf("Value of errno: %d\n", errno);
+    perror("Oh no");
     return ERROR;
   }
   return SUCCESS;
 }
 
 int streamListen(const int sock) {
+  printf("Attempting to listen...\n");
   if (listen(sock, MAX_PENDING) < 0) {
+    printf("Failed to listen - Value of errno: %d\n", errno);
+    perror("listen failure");
     return ERROR;
   }
+  printf("Listen initiated!\n");
   return SUCCESS;
 }
 
 int streamAccept(const int sock, struct sockaddr_in *clientAddress, int *clientSock) {
-  socklen_t clientLength = sizeof(clientAddress);
+  socklen_t clientLength = sizeof(struct sockaddr_in);
+  printf("Attempting to accept...\n");
   if ((*clientSock = accept(sock, (struct sockaddr *) &clientAddress, &clientLength)) < 0) {
+    printf("Failed to accept - Value of errno: %d\n", errno);
+    perror("accept failure");
     return ERROR;
   }
+  printf("Accepted!\n");
   return SUCCESS;
 }
 
@@ -175,12 +189,8 @@ int receiveStreamMessage(const int socket, char *message, const size_t messageSi
   while (numBytes > 0) {
     memcpy(message + offset, tempBuffer, numBytes);
     offset += numBytes;
-    if (numBytes != (ssize_t) messageSize) {
-      free(tempBuffer);
-      printf("Stream recv: received more bytes than expected: received %zd, expected %zd. Output is truncated.\n",
-             numBytes,
-             messageSize);
-      return ERROR;
+    if (offset == messageSize) {
+      break;
     }
     numBytes = recv(socket, tempBuffer, messageSize, 0);
   }

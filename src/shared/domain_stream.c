@@ -4,9 +4,9 @@
  */
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "domain_stream.h"
@@ -45,7 +45,7 @@ static int streamAllocateHandle(StreamDomainServiceHandle **handle) {
   if (*handle == NULL) {
     return DOMAIN_INIT_FAILURE;
   }
-  (*handle)->streamDomainService = calloc(1, sizeof(StreamDomainServiceHandle));
+  (*handle)->streamDomainService = calloc(1, sizeof(StreamDomainService));
   if ((*handle)->streamDomainService == NULL) {
     free(*handle);
     *handle = NULL;
@@ -62,7 +62,7 @@ static int streamAllocateHandle(StreamDomainServiceHandle **handle) {
  * @param handle
  * @return
  */
-int startService(const StreamDomainServiceOpts options, StreamDomainServiceHandle **handle) {
+int startStreamService(const StreamDomainServiceOpts options, StreamDomainServiceHandle **handle) {
   if (streamAllocateHandle(handle) == DOMAIN_INIT_FAILURE) {
     return DOMAIN_INIT_FAILURE;
   }
@@ -117,11 +117,15 @@ int startService(const StreamDomainServiceOpts options, StreamDomainServiceHandl
  * @param handle
  * @return
  */
-int stopService(StreamDomainServiceHandle **handle) {
+int stopStreamService(StreamDomainServiceHandle **handle) {
   if (handle != NULL && *handle != NULL && (*handle)->streamDomainService != NULL) {
     if ((*handle)->streamDomainService->sock >= 0) {
       close((*handle)->streamDomainService->sock);
     }
+    if ((*handle)->streamDomainService->clientSock>= 0) {
+      close((*handle)->streamDomainService->clientSock);
+    }
+
     free((*handle)->streamDomainService);
   }
   if (handle != NULL && *handle != NULL) {
@@ -131,13 +135,6 @@ int stopService(StreamDomainServiceHandle **handle) {
   return DOMAIN_SUCCESS;
 }
 
-/**
- *
- * @param handle
- * @param message
- * @param hostAddr
- * @return
- */
 int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message) {
   char *buf = malloc(handle->streamDomainService->outgoingSerializer.messageSize);
   const StreamDomainService *service = handle->streamDomainService;
@@ -158,13 +155,6 @@ int toStreamDomainHost(StreamDomainServiceHandle *handle, void *message) {
   return status;
 }
 
-/**
- *
- * @param handle
- * @param message
- * @param hostAddr
- * @return
- */
 int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message) {
   char *buf = malloc(handle->streamDomainService->incomingDeserializer.messageSize);
   if (!buf) {
@@ -175,7 +165,14 @@ int fromStreamDomainHost(StreamDomainServiceHandle *handle, void *message) {
 
   int status = DOMAIN_SUCCESS;
 
-  if (receiveStreamMessage(service->sock, buf, service->incomingDeserializer.messageSize)) {
+  int sock;
+  if (handle->streamDomainService->isServer) {
+    sock = handle->streamDomainService->clientSock;
+  } else {
+    sock = handle->streamDomainService->sock;
+  }
+
+  if (receiveStreamMessage(sock, buf, service->incomingDeserializer.messageSize)) {
     printf("Unable to receive message from domain\n");
     status = DOMAIN_FAILURE;
   } else if (service->incomingDeserializer.deserializer(buf, message) == MESSAGE_DESERIALIZER_FAILURE) {

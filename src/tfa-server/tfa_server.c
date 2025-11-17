@@ -19,8 +19,8 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DomainServiceHandle *pkeDomain = NULL;
-static DomainServiceHandle *tfaDomain = NULL;
+static DatagramDomainServiceHandle *pkeDomain = NULL;
+static DatagramDomainServiceHandle *tfaDomain = NULL;
 static struct sockaddr_in pkServerAddr;
 
 
