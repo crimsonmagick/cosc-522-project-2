@@ -125,6 +125,19 @@ int getLodiLoopOption() {
     return selected;
 }
 
+void getStringInput(char *inputName, char *inputStr, const int strLength) {
+    bool inputSuccess = false;
+    while (!inputSuccess) {
+        printf("Please enter your %s:\n", inputName);
+
+        if (!fgets(inputStr, strLength, stdin)) {
+            printf("Failed to read user input. Please try again:\n");
+        } else {
+            inputSuccess = true;
+        }
+    }
+}
+
 /**
  * Generic method for retrieving a long integer from keyboard input.
  * @param inputName The name of the input you're prompting for
@@ -190,9 +203,10 @@ int lodiPost(const unsigned int userID, const long timestamp, const long digital
         .userID = userID,
         .recipientID = 0,
         .timestamp = timestamp,
-        .digitalSig = digitalSignature,
-        .message = "This should be a custom input message!"
+        .digitalSig = digitalSignature
     };
+    getStringInput("your Lodi message", request.message, 100);
+
 
     if (toStreamDomainHost(lodiDomain, (void *) &request) == ERROR) {
         printf("Failed to send Post...\n");
