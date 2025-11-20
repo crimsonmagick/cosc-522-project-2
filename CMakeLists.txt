@@ -44,6 +44,8 @@ target_link_libraries(lodi_client PRIVATE m)
 
 add_executable(lodi_server
     src/lodi-server/lodi_server.c
+    src/lodi-server/message_repository.h
+    src/lodi-server/message_repository.c
     ${COMMON_SRC}
 )
 add_executable(pke_server

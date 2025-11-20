@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "message_repository.h"
 #include "messaging/lodi_messaging.h"
 #include "shared.h"
 #include "messaging/pke_messaging.h"
@@ -116,7 +117,13 @@ int main() {
       continue;
     } else if (receivedMessage.messageType == post) {
       printf("Persisting idol message, message=%s...\n", receivedMessage.message);
-      // TODO persist message
+      addMessage(receivedMessage.userID, receivedMessage.message);
+      char **messages;
+      int messageCount;
+      getMessages(receivedMessage.userID, &messages, &messageCount);
+      for (int i = 0; i < messageCount; i++) {
+        printf("Message %d: %s\n", i, messages[i]);
+      }
       responseMessageType = ackPost;
     }
 

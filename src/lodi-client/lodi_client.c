@@ -258,13 +258,14 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
     printf("Req A 2. b. 1. Login successful! Received: messageType=%u, userID=%u\n",
            response.messageType, response.userID);
 
-    printf("Req A 3. Please select from our many amazing Lodi options:\n");
 
     int selected = 0;
     while (true) {
+        printf("Please select from our many amazing Lodi options:\n");
         selected = getLodiLoopOption();
         if (selected == 1) {
             lodiPost(userID, timestamp, digitalSignature);
+            printf("Message posted successfully!\n");
         } else if (selected == 2) {
             // TODO send logout message
             break;
