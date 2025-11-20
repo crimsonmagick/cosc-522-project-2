@@ -96,7 +96,7 @@ int main() {
 int getMainOption() {
     printf("1. Register your Lodi Key\n");
     printf("2. Login to Lodi\n");
-    printf("3. Exit\n");
+    printf("3. Quit\n");
 
     int selected = 0;
     char line[64];
@@ -113,7 +113,8 @@ int getMainOption() {
  * @return the selected option (it's gonna be 1!)
  */
 int getLodiLoopOption() {
-    printf("1. Exit to main menu\n");
+    printf("1. Post a message\n");
+    printf("2. Logout\n");
 
     int selected = 0;
     char line[64];
@@ -182,6 +183,34 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
     return SUCCESS;
 }
 
+
+int lodiPost(const unsigned int userID, const long timestamp, const long digitalSignature) {
+    const PClientToLodiServer request = {
+        .messageType = post,
+        .userID = userID,
+        .recipientID = 0,
+        .timestamp = timestamp,
+        .digitalSig = digitalSignature,
+        .message = "This should be a custom input message!"
+    };
+
+    if (toStreamDomainHost(lodiDomain, (void *) &request) == ERROR) {
+        printf("Failed to send Post...\n");
+        return ERROR;
+    }
+
+    LodiServerMessage response;
+
+    if (fromStreamDomainHost(lodiDomain, &response) == DOMAIN_FAILURE) {
+        printf("Failed to receive Post response...\n");
+        return ERROR;
+    }
+
+    printf("Received ack of post: messageType=%u, userID=%u\n",
+           response.messageType, response.userID);
+    return SUCCESS;
+}
+
 /**
  * Authenticates user, logging into the Lodi server. Fulfills requirement A. 2.
  *
@@ -218,11 +247,15 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
     printf("Req A 3. Please select from our many amazing Lodi options:\n");
 
     int selected = 0;
-    while (selected != 1) {
+    while (true) {
         selected = getLodiLoopOption();
-
-        if (selected != 1) {
-            printf("Please enter a valid option: 1\n");
+        if (selected == 1) {
+            lodiPost(userID, timestamp, digitalSignature);
+        } else if (selected == 2) {
+            // TODO send logout message
+            break;
+        } else {
+            printf("Please enter a valid option\n");
         }
     }
     return SUCCESS;

@@ -102,21 +102,26 @@ int main() {
      * Opted to allow clients to use timeouts as failures instead. It was a choice between the requirement of using
      * the structs + enums or expanding it. We chose to keep the struct as-is.
      */
-    if (authenticated) {
+    enum LodiServerMessageType responseMessageType = failure;
+    if (authenticated && receivedMessage.messageType == login) {
       printf("Verifying login with TFA...\n");
       if (sendPushRequest(receivedMessage.userID) == ERROR) {
         printf("Req E 1. c. 1 Failed to authenticate with push confirmation! Continuing without response...\n");
         continue;
       }
-    } else {
+      responseMessageType = ackLogin;
+      printf("Req E 1. b. 1) Validated TFA successfully!\n");
+    } else if (receivedMessage.messageType == login) {
       printf("Req E 1. c. 1) b)Failed to authenticate with public key! Continuing without response...\n");
       continue;
+    } else if (receivedMessage.messageType == post) {
+      printf("Persisting idol message, message=%s...\n", receivedMessage.message);
+      // TODO persist message
+      responseMessageType = ackPost;
     }
 
-    printf("Req E 1. b. 1) Validated TFA successfully!\n");
-
     LodiServerMessage responseMessage = {
-      .messageType = ackLogin,
+      .messageType = responseMessageType,
       .userID = receivedMessage.userID,
       .message = "Hello from Lodi Server!"
     };

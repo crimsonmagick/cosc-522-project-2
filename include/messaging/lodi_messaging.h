@@ -17,7 +17,7 @@ enum LodiClientMessageType {
 };
 
 enum LodiServerMessageType {
-  ackLogin, ackPost, ackFeed, ackFollow, ackUnfollow, ackLogout
+  ackLogin, ackPost, ackFeed, ackFollow, ackUnfollow, ackLogout, failure
 };
 
 typedef struct {
