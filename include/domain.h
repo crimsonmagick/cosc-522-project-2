@@ -23,4 +23,11 @@ typedef struct MessageDeserializer {
   int (*deserializer)(char *, void *);
 } MessageDeserializer;
 
+typedef struct {
+  unsigned int messageType; /* placeholder for implementations */
+  unsigned int userID; /* user identifier, common to all messages*/
+  // struct may have arbitrary fields contiguously in memory after the userID
+} UserMessage;
+
+
 #endif

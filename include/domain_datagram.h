@@ -8,39 +8,51 @@
 
 #include <netinet/in.h>
 #include "domain.h"
+#include "messaging/network.h"
 
 typedef struct DomainServiceOpts {
-  char *localPort;
-  int timeoutMs;
-  MessageSerializer outgoingSerializer;
-  MessageDeserializer incomingDeserializer;
+  int localPort; // optional
+  int sendTimeoutMs; // optional
+  int receiveTimeoutMs; // optional
+  enum ConnectionType connectionType; // required
+  MessageSerializer outgoingSerializer; // required
+  MessageDeserializer incomingDeserializer; // required
 } DomainServiceOpts;
 
 typedef struct DomainService {
   int sock;
+  enum ConnectionType connectionType;
   struct sockaddr_in localAddr;
+  struct timeval sendTimeout;
+  struct timeval receiveTimeout;
+
   MessageSerializer outgoingSerializer;
   MessageDeserializer incomingDeserializer;
-  int (*start)();
-  int (*stop)();
+
+  int (* start)(struct DomainService *);
+  int (* stop)(struct DomainService *);
 } DomainService;
 
 typedef struct DomainClient {
   DomainService base;
-  int (*send)(void *);
-  int (*recv)(void *);
+  int (* send)(UserMessage*);
+  int (* recv)(UserMessage*);
 } DomainClient;
 
 typedef struct DomainHandle {
-  struct sockaddr_in host;
+  unsigned int userID;
+  struct sockaddr_in host; // abstract with userID maps?
 } DomainHandle;
 
 typedef struct DomainServer {
   DomainService base;
-  int (*send)(void *, DomainHandle *);
-  int (*recv)(void *, DomainHandle *);
+  int (* send)(struct DomainServer self, UserMessage*, DomainHandle*);
+  int (* receive)(struct DomainServer self, UserMessage*, DomainHandle*);
 
 } DomainServer;
+
+int createServer(DomainServiceOpts options, DomainServer** server);
+int createClient(DomainServiceOpts options, DomainClient** client);
 
 int startDatagramService(const DomainServiceOpts options, DomainService **service);
 

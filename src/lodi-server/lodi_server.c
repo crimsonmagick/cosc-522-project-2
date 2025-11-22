@@ -97,12 +97,6 @@ int main() {
       }
     }
 
-    /*
-     * IMPORTANT NOTE!!! E 1. c. 1) mentions sending a corresponding ERROR message.
-     * This *cannot* be done as the struct enum LodiServerToLodiClientAcks does not have a failure status!!!
-     * Opted to allow clients to use timeouts as failures instead. It was a choice between the requirement of using
-     * the structs + enums or expanding it. We chose to keep the struct as-is.
-     */
     enum LodiServerMessageType responseMessageType = failure;
     if (authenticated && receivedMessage.messageType == login) {
       printf("Verifying login with TFA...\n");

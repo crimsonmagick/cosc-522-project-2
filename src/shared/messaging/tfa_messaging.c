@@ -75,7 +75,7 @@ int initTFAClientDomain(DomainService **service, const bool isDuplex) {
   }
   const DomainServiceOpts options = {
     .localPort = port,
-    .timeoutMs = DEFAULT_TIMEOUT_MS,
+    .sendTimeoutMs = DEFAULT_TIMEOUT_MS,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming
   };
@@ -100,7 +100,7 @@ int initTFAServerDomain(DomainService **service) {
   };
   const DomainServiceOpts options = {
     .localPort = serverConfig.port,
-    .timeoutMs = 0,
+    .sendTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming
   };
