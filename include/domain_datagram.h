@@ -12,12 +12,17 @@
 
 typedef struct DomainServiceOpts {
   int localPort; // optional
-  int sendTimeoutMs; // optional
   int receiveTimeoutMs; // optional
   enum ConnectionType connectionType; // required
   MessageSerializer outgoingSerializer; // required
   MessageDeserializer incomingDeserializer; // required
 } DomainServiceOpts;
+
+typedef struct DomainClientOpts {
+  DomainServiceOpts baseOpts;
+  int remotePort;
+  char * remoteHost;
+} DomainClientOpts;
 
 typedef struct DomainService {
   int sock;
@@ -31,12 +36,14 @@ typedef struct DomainService {
 
   int (* start)(struct DomainService *);
   int (* stop)(struct DomainService *);
+  int (* destroy)(struct DomainService *);
 } DomainService;
 
 typedef struct DomainClient {
   DomainService base;
-  int (* send)(UserMessage*);
-  int (* recv)(UserMessage*);
+  struct sockaddr_in remoteAddr;
+  int (* send)(struct DomainClient *, UserMessage*);
+  int (* receive)(struct DomainClient *, UserMessage*);
 } DomainClient;
 
 typedef struct DomainHandle {
@@ -46,13 +53,13 @@ typedef struct DomainHandle {
 
 typedef struct DomainServer {
   DomainService base;
-  int (* send)(struct DomainServer self, UserMessage*, DomainHandle*);
-  int (* receive)(struct DomainServer self, UserMessage*, DomainHandle*);
+  int (* send)(struct DomainServer *self, UserMessage*, DomainHandle*);
+  int (* receive)(struct DomainServer *self, UserMessage*, DomainHandle*);
 
 } DomainServer;
 
 int createServer(DomainServiceOpts options, DomainServer** server);
-int createClient(DomainServiceOpts options, DomainClient** client);
+int createClient(DomainClientOpts options, DomainClient** client);
 
 int startDatagramService(const DomainServiceOpts options, DomainService **service);
 
@@ -62,7 +69,7 @@ int toDatagramDomainHost(DomainService *service, void *message, struct sockaddr_
 
 int fromDatagramDomainHost(DomainService *service, void *message, struct sockaddr_in *hostAddr);
 
-int changeDatagramTimeout(DomainService *service, int timeoutMs);
+int changeTimeout(DomainService *service, int timeoutMs);
 
 
 

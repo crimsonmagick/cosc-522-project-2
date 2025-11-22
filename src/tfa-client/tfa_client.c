@@ -97,7 +97,7 @@ void handleTFAPush() {
 
         TFAServerToTFAClient pushRequest;
 
-        changeDatagramTimeout(tfaClientDomain, 0); // block
+        changeTimeout(tfaClientDomain, 0); // block
         int receivedSuccess = fromDatagramDomainHost(tfaClientDomain, &pushRequest, &clientAddress);
 
         if (receivedSuccess == ERROR) {
@@ -116,7 +116,7 @@ void handleTFAPush() {
             .timestamp = 0,
             .digitalSig = 0
         };
-        changeDatagramTimeout(tfaClientDomain, DEFAULT_TIMEOUT_MS); // timeout on send
+        changeTimeout(tfaClientDomain, DEFAULT_TIMEOUT_MS); // timeout on send
 
         int sendStatus = toDatagramDomainHost(tfaClientDomain, &toSendMessage, &tfaServerAddr);
 

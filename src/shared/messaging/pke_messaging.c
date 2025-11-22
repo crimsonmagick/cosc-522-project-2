@@ -101,7 +101,7 @@ int initPKEClientDomain(DomainService **service) {
   };
   const DomainServiceOpts options = {
     .localPort = 0,
-    .sendTimeoutMs = DEFAULT_TIMEOUT_MS,
+    .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming
   };
@@ -130,7 +130,7 @@ int initPKEServerDomain(DomainService **service) {
   };
   const DomainServiceOpts options = {
     .localPort = atoi(serverConfig.port),
-    .sendTimeoutMs = 0,
+    .receiveTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming
   };
