@@ -68,17 +68,15 @@ int initTFAClientDomain(DomainService **service, const bool isDuplex) {
     TFA_SERVER_RESPONSE_SIZE,
     .deserializer = (int (*)(char *, void *)) deserializeServerTFA
   };
-  char * port = NULL;
-  if (isDuplex) {
-    const ServerConfig server_config = getServerConfig(TFA_CLIENT);
-    port = server_config.port;
-  }
-  const DomainServiceOpts options = {
-    .localPort = port,
+  DomainServiceOpts options = {
     .sendTimeoutMs = DEFAULT_TIMEOUT_MS,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming
   };
+  if (isDuplex) {
+    const ServerConfig server_config = getServerConfig(TFA_CLIENT);
+    options.localPort = atoi(server_config.port);
+  }
 
   DomainService *allocatedService = NULL;
   if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
@@ -99,7 +97,7 @@ int initTFAServerDomain(DomainService **service) {
     .deserializer = (int (*)(char *, void *)) deserializeClientTFA
   };
   const DomainServiceOpts options = {
-    .localPort = serverConfig.port,
+    .localPort = atoi(serverConfig.port),
     .sendTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming

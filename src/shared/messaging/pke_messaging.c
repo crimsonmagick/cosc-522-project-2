@@ -129,7 +129,7 @@ int initPKEServerDomain(DomainService **service) {
     .deserializer = (int (*)(char *, void *)) deserializeClientPK
   };
   const DomainServiceOpts options = {
-    .localPort = serverConfig.port,
+    .localPort = atoi(serverConfig.port),
     .sendTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming

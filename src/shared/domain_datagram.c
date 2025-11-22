@@ -126,7 +126,7 @@ int startDatagramService(const DomainServiceOpts options,
     const struct timeval temp = {.tv_sec = timeoutS, .tv_usec = timeoutUs};
     *timeout = temp;
   }
-  if (options.localPort != NULL) {
+  if (options.localPort > 0) {
     domainService->localAddr =
       getNetworkAddress(LOCALHOST, options.localPort);
     domainService->sock =
