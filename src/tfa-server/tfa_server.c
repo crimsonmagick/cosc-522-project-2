@@ -20,7 +20,7 @@
 #include "util/server_configs.h"
 
 static DomainClient *pkeClient = NULL;
-static DomainService *tfaDomain = NULL;
+static DomainServer *tfaServer = NULL;
 static struct sockaddr_in pkServerAddr;
 
 
@@ -32,22 +32,24 @@ static struct sockaddr_in pkServerAddr;
 int main() {
     // initialize domains
     initPKEClientDomain(&pkeClient);
-    initTFAServerDomain(&tfaDomain);
+    pkeClient->base.start(&pkeClient->base);
+    initTFAServerDomain(&tfaServer);
+    tfaServer->base.start(&tfaServer->base);
     pkServerAddr = getServerAddr(PK);
     // initialize repository
     initRepository();
 
     while (true) {
-        struct sockaddr_in clientAddress;
 
+        DomainHandle receiveHandle;
         TFAClientOrLodiServerToTFAServer receivedMessage;
-        if (fromDatagramDomainHost(tfaDomain, &receivedMessage, &clientAddress) == DOMAIN_FAILURE) {
+        if (tfaServer->receive(tfaServer, (UserMessage *) &receivedMessage, &receiveHandle) == DOMAIN_FAILURE) {
             printf("Failed to handle incoming message, continuing...\n");
         }
 
         if (receivedMessage.messageType == registerTFA) {
             unsigned int publicKey;
-            getPublicKey(pkeClient, &pkServerAddr, receivedMessage.userID, &publicKey);
+            getPublicKey(pkeClient, receivedMessage.userID, &publicKey);
             printf("Req 1. a. 2) a) and b) - sent requestPublicKey and got responsePublicKey\n");
 
             // GOT PUBLIC KEY, NOW AUTHENTICATE
@@ -68,7 +70,7 @@ int main() {
                 receivedMessage.userID,
             };
 
-            int sendSuccess = toDatagramDomainHost(tfaDomain, &registrationSuccessMessage, &clientAddress);
+            int sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &registrationSuccessMessage, &receiveHandle);
 
             if (sendSuccess == ERROR) {
                 printf("Error while sending message.\n");
@@ -78,7 +80,7 @@ int main() {
             printf("Req C 1. a. 2) b. (repeated) sent confirmTFA\n");
 
             // RECEIVE ACK MESSAGE OF DESTINY
-            int receivedSuccess = fromDatagramDomainHost(tfaDomain, &receivedMessage, &clientAddress);
+            int receivedSuccess = tfaServer->receive(tfaServer, (UserMessage *) &receivedMessage, &receiveHandle);
 
             if (receivedSuccess == ERROR) {
                 printf("Failed to handle incoming ACK TFAClientOrLodiServerToTFAServer message.\n");
@@ -92,9 +94,9 @@ int main() {
             printf("Req C 1. a. 2) c. Received expected ack register message! Finishing registration.\n");
 
             // REGISTER CLIENT
-            addIP(receivedMessage.userID, clientAddress.sin_addr, ntohs(clientAddress.sin_port));
+            addIP(receivedMessage.userID, receiveHandle.host.sin_addr, ntohs(receiveHandle.host.sin_port));
             printf("Registered client! Sending final TFA confirmation message! (not in reqs)\n");
-            sendSuccess = toDatagramDomainHost(tfaDomain, &registrationSuccessMessage, &clientAddress);
+            sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &registrationSuccessMessage, &receiveHandle);
             if (sendSuccess == ERROR) {
                 printf("Warning: error while sending final ack message for client registration.\n");
             }
@@ -118,7 +120,12 @@ int main() {
             tfaClientAddr.sin_addr = registeredAddress;
             tfaClientAddr.sin_port = htons(port);
 
-            int sendSuccess = toDatagramDomainHost(tfaDomain, &pushRequest, &tfaClientAddr);
+            DomainHandle tfaClientHandle = {
+                .userID = receivedMessage.userID,
+                .host = tfaClientAddr
+            };
+
+            int sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushRequest, &tfaClientHandle);
             if (sendSuccess == ERROR) {
                 printf("Failed to send push auth request to TFA client, aborting...\n");
                 continue;
@@ -126,7 +133,7 @@ int main() {
             printf("Req C. 3. a. sent pushTFA message\n");
 
             TFAClientOrLodiServerToTFAServer pushResponse;
-            int receivedSuccess = fromDatagramDomainHost(tfaDomain, &pushResponse, &tfaClientAddr);
+            int receivedSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushResponse, &tfaClientHandle);
             if (receivedSuccess == ERROR) {
                 printf("Error while receiving TFA client push auth message.\n");
                 continue;
@@ -142,7 +149,7 @@ int main() {
                 responseAuth,
                 receivedMessage.userID
             };
-            sendSuccess = toDatagramDomainHost(tfaDomain, &pushNotificationResponse, &clientAddress);
+            sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushNotificationResponse, &tfaClientHandle);
             if (sendSuccess == ERROR) {
                 printf("Error while sending push response to Lodi server\n");
             }

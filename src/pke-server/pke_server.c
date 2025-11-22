@@ -16,18 +16,18 @@
 #include "key_repository.h"
 #include "shared.h"
 
-static DomainService *pkeDomain = NULL;
+static DomainServer *pkeServer = NULL;
 
 int main() {
-  initPKEServerDomain(&pkeDomain);
+  initPKEServerDomain(&pkeServer);
+  pkeServer->base.start(&pkeServer->base);
   initRepository();
 
   while (true) {
-    struct sockaddr_in clientAddress;
+    DomainHandle receiveHandle;
     PKServerToLodiClient receivedMessage;
-    const int receivedSuccess = fromDatagramDomainHost(pkeDomain, &receivedMessage, &clientAddress);
 
-    if (receivedSuccess == ERROR) {
+    if (pkeServer->receive(pkeServer, (UserMessage *) &receivedMessage, &receiveHandle) == ERROR) {
       printf("Failed to handle incoming PClientToPKServer message.\n");
       continue;
     }
@@ -55,8 +55,7 @@ int main() {
       printf("Warning: Received message with unknown message type.\n");
     }
 
-    const int sendSuccess = toDatagramDomainHost(pkeDomain, &responseMessage, &clientAddress);
-    if (sendSuccess == ERROR) {
+    if (pkeServer->send(pkeServer, (UserMessage *) &responseMessage, &receiveHandle) == ERROR) {
       printf("Error while sending message.\n");
     } else {
       printf("Responded to client successfully.\n");

@@ -36,7 +36,8 @@ typedef struct DomainService {
 
   int (* start)(struct DomainService *);
   int (* stop)(struct DomainService *);
-  int (* destroy)(struct DomainService *);
+  int (* destroy)(struct DomainService **);
+  int (* changeTimeout)(struct DomainService *, int timeoutMs);
 } DomainService;
 
 typedef struct DomainClient {
@@ -58,19 +59,7 @@ typedef struct DomainServer {
 
 } DomainServer;
 
-int createServer(DomainServiceOpts options, DomainServer** server);
 int createClient(DomainClientOpts options, DomainClient** client);
-
-int startDatagramService(const DomainServiceOpts options, DomainService **service);
-
-int stopDatagramService(DomainService **service);
-
-int toDatagramDomainHost(DomainService *service, void *message, struct sockaddr_in *hostAddr);
-
-int fromDatagramDomainHost(DomainService *service, void *message, struct sockaddr_in *hostAddr);
-
-int changeTimeout(DomainService *service, int timeoutMs);
-
-
+int createServer(DomainServiceOpts options, DomainServer** server);
 
 #endif

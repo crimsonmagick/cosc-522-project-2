@@ -59,7 +59,8 @@ int deserializeServerTFA(char *serialized, TFAServerToLodiServer *deserialized) 
  * Boilerplate DomainService constructor functions
  */
 
-int initTFAClientDomain(DomainService **service, const bool isDuplex) {
+int initTFAClientDomain(DomainClient **client, const bool bindToPort) {
+  ServerConfig serverConfig = getServerConfig(TFA);
   const MessageSerializer outgoing = {
     TFA_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *))serializeClientTFA
@@ -68,25 +69,29 @@ int initTFAClientDomain(DomainService **service, const bool isDuplex) {
     TFA_SERVER_RESPONSE_SIZE,
     .deserializer = (int (*)(char *, void *)) deserializeServerTFA
   };
-  DomainServiceOpts options = {
-    .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
-    .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming
+  DomainClientOpts options = {
+    .baseOpts = {
+      .localPort = 0,
+      .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
+      .outgoingSerializer = outgoing,
+      .incomingDeserializer = incoming,
+      .connectionType = DATAGRAM
+    },
+    .remotePort = atoi(serverConfig.port),
+    .remoteHost = serverConfig.address
   };
-  if (isDuplex) {
+  if (bindToPort) {
     const ServerConfig server_config = getServerConfig(TFA_CLIENT);
-    options.localPort = atoi(server_config.port);
+    options.baseOpts.localPort = atoi(server_config.port);
   }
 
-  DomainService *allocatedService = NULL;
-  if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
+  if (createClient(options, client) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  *service = allocatedService;
   return SUCCESS;
 }
 
-int initTFAServerDomain(DomainService **service) {
+int initTFAServerDomain(DomainServer **server) {
   const ServerConfig serverConfig = getServerConfig(TFA);
   const MessageSerializer outgoing = {
     TFA_SERVER_RESPONSE_SIZE,
@@ -100,13 +105,12 @@ int initTFAServerDomain(DomainService **service) {
     .localPort = atoi(serverConfig.port),
     .receiveTimeoutMs = 0,
     .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming
+    .incomingDeserializer = incoming,
+    .connectionType = DATAGRAM
   };
 
-  DomainService *allocatedService = NULL;
-  if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
+  if (createServer(options, server) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  *service = allocatedService;
   return SUCCESS;
 }

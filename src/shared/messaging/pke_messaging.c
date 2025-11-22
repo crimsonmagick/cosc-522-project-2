@@ -24,21 +24,19 @@
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
  */
-int getPublicKey(DomainClient *client, struct sockaddr_in *pkeAddr, const unsigned int userID,
-                 unsigned int *publicKey) {
+int getPublicKey(DomainClient *client, const unsigned int userID, unsigned int *publicKey) {
   const PClientToPKServer requestMessage = {
     .messageType = requestKey,
     userID
   };
 
-  if (toDatagramDomainHost(&client->base, (void *) &requestMessage, pkeAddr) == DOMAIN_FAILURE) {
+  if (client->send(client, (UserMessage *) &requestMessage) == DOMAIN_FAILURE) {
     printf("Unable to get public key, aborting ...\n");
     return ERROR;
   }
 
   PKServerToLodiClient responseMessage;
-  struct sockaddr_in receivedAddr;
-  if (fromDatagramDomainHost(&client->base, &responseMessage, &receivedAddr) == DOMAIN_FAILURE) {
+  if (client->receive(client, (UserMessage *) &responseMessage) == DOMAIN_FAILURE) {
     printf("Failed to receive public key, aborting ...\n");
     return ERROR;
   }
@@ -115,14 +113,6 @@ int initPKEClientDomain(DomainClient **client) {
   if (createClient(options, client) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  // PClientToPKServer testReq = {
-  //   .messageType = registerKey,
-  //   .userID = 213,
-  //   .publicKey = 1234
-  // };
-  // char buf
-  // outgoing.serializer(testReq, )
-
   return SUCCESS;
 }
 
@@ -130,7 +120,7 @@ int initPKEClientDomain(DomainClient **client) {
  * Boilerplate DomainService constructor functions
  */
 
-int initPKEServerDomain(DomainService **service) {
+int initPKEServerDomain(DomainServer **server) {
   const ServerConfig serverConfig = getServerConfig(PK);
   const MessageSerializer outgoing = {
     PK_SERVER_RESPONSE_SIZE,
@@ -144,13 +134,12 @@ int initPKEServerDomain(DomainService **service) {
     .localPort = atoi(serverConfig.port),
     .receiveTimeoutMs = 0,
     .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming
+    .incomingDeserializer = incoming,
+    .connectionType = DATAGRAM
   };
 
-  DomainService *allocatedService = NULL;
-  if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
+  if (createServer(options, server) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  *service = allocatedService;
   return SUCCESS;
 }

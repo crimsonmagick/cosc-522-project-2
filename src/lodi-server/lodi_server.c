@@ -24,7 +24,7 @@ static DomainClient *pkeClient = NULL;
 static struct sockaddr_in pkServerAddress;
 static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in lodiServerAddress;
-static DomainService *tfaDomain = NULL;
+static DomainClient *tfaClient = NULL;
 static struct sockaddr_in tfaServerAddress;
 
 /**
@@ -38,14 +38,13 @@ int sendPushRequest(const unsigned int userID) {
     .userID = userID
   };
 
-  if (toDatagramDomainHost(tfaDomain, (void *) &requestMessage, &tfaServerAddress) == ERROR) {
+  if (tfaClient->send(tfaClient, (UserMessage *) &requestMessage) == ERROR) {
     printf("Unable to send push notification, aborting...\n");
     return ERROR;
   }
 
   TFAServerToLodiServer response;
-  struct sockaddr_in receiveAddr;
-  if (fromDatagramDomainHost(tfaDomain, &response, &receiveAddr) == ERROR) {
+  if (tfaClient->receive(tfaClient, (UserMessage *) &response) == ERROR) {
     printf("Unable to receive push notification response, aborting...\n");
     return ERROR;
   }
@@ -66,7 +65,7 @@ int main() {
     printf("Failed to initialize Lodi Server Domain!\n");
     exit(-1);
   }
-  initTFAClientDomain(&tfaDomain, false);
+  initTFAClientDomain(&tfaClient, false);
   pkServerAddress = getServerAddr(PK);
   lodiServerAddress = getServerAddr(LODI);
   tfaServerAddress = getServerAddr(TFA);
@@ -84,7 +83,7 @@ int main() {
 
     unsigned int publicKey;
     bool authenticated = false;
-    if (getPublicKey(pkeClient, &pkServerAddress, receivedMessage.userID, &publicKey) == ERROR) {
+    if (getPublicKey(pkeClient, receivedMessage.userID, &publicKey) == ERROR) {
       printf("Failed to retrieve public key!\n");
     } else {
       printf("E 1. a. 1) a. and b. sent requestPublicKey, received responsePublicKey");

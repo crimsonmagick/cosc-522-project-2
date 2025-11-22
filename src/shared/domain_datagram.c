@@ -14,26 +14,109 @@
 
 #define INACTIVE_SOCK (-1)
 
-/**
- * Deallocates handle and domain service
- * @param service a non-null handle
- * @return DOMAIN_INIT_FAILURE value
- */
-int failInit(DomainService **service) {
-  free(*service);
-  return DOMAIN_INIT_FAILURE;
+static struct timeval createTimeout(const int timeoutMs) {
+  const long timeoutS = timeoutMs / 1000;
+  const long timeoutUs = timeoutMs % 1000 * 1000;
+  const struct timeval timeout = {.tv_sec = timeoutS, .tv_usec = timeoutUs};
+  return timeout;
+}
+
+static int stopUdpService(DomainService *service) {
+  if (service->sock >= 0 && close(service->sock) < 0) {
+    return DOMAIN_FAILURE;
+  }
+  service->sock = INACTIVE_SOCK;
+  return DOMAIN_SUCCESS;
 }
 
 /**
- * Handles memory allocation of service
- * @param service The return value, the service
- * @return DOMAIN_INIT_FAILURE or DOMAIN_SUCCESS
+ *
+ * @param service
+ * @return
  */
-int allocateHandle(DomainService **service) {
-  *service = calloc(1, sizeof(DomainService));
-  if (*service == NULL) {
+static int destroyDatagramService(DomainService **service) {
+  if (*service != NULL) {
+    if (stopUdpService(*service) == DOMAIN_FAILURE) {
+      return DOMAIN_FAILURE;
+    }
     free(*service);
-    return DOMAIN_INIT_FAILURE;
+  }
+  return DOMAIN_SUCCESS;
+}
+
+/**
+ *
+ * @param service
+ * @param message
+ * @param hostAddr
+ * @return
+ */
+static int toDatagramDomainHost(DomainService *service,
+                                void *message,
+                                struct sockaddr_in *hostAddr) {
+  char *buf = malloc(service->outgoingSerializer.messageSize);
+
+  int status = DOMAIN_SUCCESS;
+
+  if (service->outgoingSerializer.serializer(message, buf) ==
+      MESSAGE_SERIALIZER_FAILURE) {
+    printf("Unable to serialize domain message\n");
+    status = DOMAIN_FAILURE;
+  } else if (sendDatagramMessage(service->sock,
+                                 buf,
+                                 service->outgoingSerializer.messageSize,
+                                 hostAddr) == ERROR) {
+    printf("Unable to send message to domain\n");
+    status = DOMAIN_FAILURE;
+  }
+
+  free(buf);
+  return status;
+}
+
+/**
+ *
+ * @param service
+ * @param message
+ * @param hostAddr
+ * @return
+ */
+int fromDatagramDomainHost(DomainService *service,
+                           void *message,
+                           struct sockaddr_in *hostAddr) {
+  char *buf = malloc(service->incomingDeserializer.messageSize);
+  if (!buf) {
+    printf("Failed to allocate message buffer\n");
+    return DOMAIN_FAILURE;
+  }
+
+  int status = DOMAIN_SUCCESS;
+
+  if (receiveDatagramMessage(service->sock,
+                             buf,
+                             service->incomingDeserializer.messageSize,
+                             hostAddr)) {
+    printf("Unable to receive message from domain\n");
+    status = DOMAIN_FAILURE;
+  } else if (service->incomingDeserializer.deserializer(buf, message) ==
+             MESSAGE_DESERIALIZER_FAILURE) {
+    printf("Unable to deserialize domain message\n");
+    status = DOMAIN_FAILURE;
+  }
+  free(buf);
+  return status;
+}
+
+/**
+ * @param service
+ * @param timeoutMs
+ * @return
+ */
+static int changeTimeout(DomainService *service, const int timeoutMs) {
+  const struct timeval timeout = createTimeout(timeoutMs);
+  if (setsockopt(service->sock, SOL_SOCKET, SO_RCVTIMEO,
+                 &timeout, sizeof(timeout)) < 0) {
+    return DOMAIN_FAILURE;
   }
   return DOMAIN_SUCCESS;
 }
@@ -82,18 +165,10 @@ static int datagramServerReceive(DomainServer *self, UserMessage *toReceive,
   return resp;
 }
 
-static struct timeval createTimeout(int timeoutMs) {
-  const long timeoutS = timeoutMs / 1000;
-  const long timeoutUs = timeoutMs % 1000 * 1000;
-  const struct timeval timeout = {.tv_sec = timeoutS, .tv_usec = timeoutUs};
-  return timeout;
-}
-
-
 static int startUdpService(DomainService *service) {
   const int sock = getSocket(&service->localAddr,
-                       &service->sendTimeout,
-                       service->connectionType);
+                             &service->sendTimeout,
+                             service->connectionType);
   if (sock < 0) {
     return DOMAIN_FAILURE;
   }
@@ -101,16 +176,8 @@ static int startUdpService(DomainService *service) {
   return DOMAIN_SUCCESS;
 }
 
-static int stopUdpService(DomainService *service) {
-  if (close(service->sock) < 0) {
-    return ERROR;
-  }
-  service->sock = INACTIVE_SOCK;
-  return SUCCESS;
-}
-
 static void initializeGenericService(DomainServiceOpts options,
-                              DomainService *service) {
+                                     DomainService *service) {
   service->sock = INACTIVE_SOCK;
   service->connectionType = options.connectionType;
   const int receiveTimeoutMs =
@@ -126,6 +193,8 @@ static void initializeGenericService(DomainServiceOpts options,
   service->outgoingSerializer = options.outgoingSerializer;
   service->start = startUdpService;
   service->stop = stopUdpService;
+  service->changeTimeout = changeTimeout;
+  service->destroy = destroyDatagramService;
 }
 
 int createServer(DomainServiceOpts options, DomainServer **server) {
@@ -151,7 +220,7 @@ int createClient(DomainClientOpts options, DomainClient **client) {
     printf("Stream client not currently supported!\n");
     return DOMAIN_FAILURE;
   }
-  *client= calloc(1, sizeof(DomainClient));
+  *client = calloc(1, sizeof(DomainClient));
   if (*client == NULL) {
     return DOMAIN_FAILURE;
   }
@@ -162,140 +231,6 @@ int createClient(DomainClientOpts options, DomainClient **client) {
   (*client)->receive = datagramClientReceive;
   (*client)->send = datagramClientSend;
   (*client)->remoteAddr = getNetworkAddress(options.remoteHost, options.remotePort);
-
-  return DOMAIN_SUCCESS;
-}
-
-/**
- * Constructor of a DomainService
- *
- * @param options
- * @param service
- * @return
- */
-int startDatagramService(const DomainServiceOpts options,
-                         DomainService **service) {
-  if (allocateHandle(service) == DOMAIN_INIT_FAILURE) {
-    return DOMAIN_INIT_FAILURE;
-  }
-  DomainService *domainService = *service;
-  struct timeval *timeout = NULL;
-  if (options.receiveTimeoutMs > 0) {
-    timeout = malloc(sizeof(struct timeval));
-    const long timeoutS = options.receiveTimeoutMs / 1000;
-    const long timeoutUs = options.receiveTimeoutMs % 1000 * 1000;
-    const struct timeval temp = {.tv_sec = timeoutS, .tv_usec = timeoutUs};
-    *timeout = temp;
-  }
-  if (options.localPort > 0) {
-    domainService->localAddr =
-        getNetworkAddress(LOCALHOST, options.localPort);
-    domainService->sock =
-        getSocket(&domainService->localAddr, timeout, DATAGRAM);
-  } else {
-    domainService->sock = getSocket(NULL, timeout, DATAGRAM);
-  }
-  if (timeout != NULL) {
-    free(timeout);
-  }
-  if (domainService->sock < 0) {
-    return failInit(service);
-  }
-  domainService->incomingDeserializer = options.incomingDeserializer;
-  domainService->outgoingSerializer = options.outgoingSerializer;
-
-  return DOMAIN_SUCCESS;
-}
-
-/**
- *
- * @param service
- * @return
- */
-int stopDatagramService(DomainService **service) {
-  if (*service != NULL) {
-    if ((*service)->sock >= 0) {
-      close((*service)->sock);
-    }
-    free(*service);
-  }
-  return DOMAIN_SUCCESS;
-}
-
-/**
- *
- * @param service
- * @param message
- * @param hostAddr
- * @return
- */
-int toDatagramDomainHost(DomainService *service,
-                         void *message,
-                         struct sockaddr_in *hostAddr) {
-  char *buf = malloc(service->outgoingSerializer.messageSize);
-
-  int status = DOMAIN_SUCCESS;
-
-  if (service->outgoingSerializer.serializer(message, buf) ==
-      MESSAGE_SERIALIZER_FAILURE) {
-    printf("Unable to serialize domain message\n");
-    status = DOMAIN_FAILURE;
-  } else if (sendDatagramMessage(service->sock,
-                                 buf,
-                                 service->outgoingSerializer.messageSize,
-                                 hostAddr) == ERROR) {
-    printf("Unable to send message to domain\n");
-    status = DOMAIN_FAILURE;
-  }
-
-  free(buf);
-  return status;
-}
-
-/**
- *
- * @param handle
- * @param message
- * @param hostAddr
- * @return
- */
-int fromDatagramDomainHost(DomainService *service,
-                           void *message,
-                           struct sockaddr_in *hostAddr) {
-  char *buf = malloc(service->incomingDeserializer.messageSize);
-  if (!buf) {
-    printf("Failed to allocate message buffer\n");
-    return DOMAIN_FAILURE;
-  }
-
-  int status = DOMAIN_SUCCESS;
-
-  if (receiveDatagramMessage(service->sock,
-                             buf,
-                             service->incomingDeserializer.messageSize,
-                             hostAddr)) {
-    printf("Unable to receive message from domain\n");
-    status = DOMAIN_FAILURE;
-  } else if (service->incomingDeserializer.deserializer(buf, message) ==
-             MESSAGE_DESERIALIZER_FAILURE) {
-    printf("Unable to deserialize domain message\n");
-    status = DOMAIN_FAILURE;
-  }
-  free(buf);
-  return status;
-}
-
-/**
- * @param service
- * @param timeoutMs
- * @return
- */
-int changeTimeout(DomainService *service, int timeoutMs) {
-  const struct timeval timeout = createTimeout(timeoutMs);
-  if (setsockopt(service->sock, SOL_SOCKET, SO_RCVTIMEO,
-                 &timeout, sizeof(timeout)) < 0) {
-    return DOMAIN_FAILURE;
-  }
 
   return DOMAIN_SUCCESS;
 }

@@ -31,18 +31,16 @@ typedef struct {
 
 int initPKEClientDomain(DomainClient **client);
 
-int initPKEServerDomain(DomainService **service);
+int initPKEServerDomain(DomainServer **server);
 
 /**
  * Gets the public key for a user for the PKE Server
  *
  * @param client Domain Service to use to retrieve public key
- * @param pkeAddr Domain Service address
  * @param userID user to retrieve for
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
  */
-int getPublicKey(DomainClient *client, struct sockaddr_in *pkeAddr, const unsigned int userID,
-                 unsigned int *publicKey);
+int getPublicKey(DomainClient *client, const unsigned int userID, unsigned int *publicKey);
 
 #endif

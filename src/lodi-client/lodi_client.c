@@ -177,7 +177,8 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
         publicKey
     };
 
-    if (toDatagramDomainHost(&pkeClient->base, (void *) &requestMessage, &pkServerAddr) == DOMAIN_FAILURE) {
+
+    if (pkeClient->send(pkeClient, (UserMessage *) &requestMessage) == DOMAIN_FAILURE) {
         printf("Unable to send registration, aborting ...\n");
         return ERROR;
     }
@@ -185,13 +186,11 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
 
     PKServerToLodiClient responseMessage;
 
-    struct sockaddr_in receiveAddress;
-    if (fromDatagramDomainHost(&pkeClient->base, &responseMessage, &receiveAddress) == DOMAIN_FAILURE) {
+    if (pkeClient->receive(pkeClient, (UserMessage *) &responseMessage) == DOMAIN_FAILURE) {
         printf("Failed to receive registration confirmation, aborting ...\n");
         return ERROR;
     }
-    printf("Req A. 1. b. - wait to receive an ackRegisterKey message to confirm registration was successful.\n");
-    printf("Req A. 1.b. message details: messageType=%u, userID=%u, publicKey=%u\n",
+    printf("Message details: messageType=%u, userID=%u, publicKey=%u\n",
            responseMessage.messageType, responseMessage.userID, responseMessage.publicKey);
 
     return SUCCESS;
