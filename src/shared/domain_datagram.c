@@ -112,6 +112,7 @@ static int stopUdpService(DomainService *service) {
 static void initializeGenericService(DomainServiceOpts options,
                               DomainService *service) {
   service->sock = INACTIVE_SOCK;
+  service->connectionType = options.connectionType;
   const int receiveTimeoutMs =
       options.receiveTimeoutMs > 0 ? options.receiveTimeoutMs : 0;
   service->receiveTimeout = createTimeout(receiveTimeoutMs);
@@ -121,6 +122,8 @@ static void initializeGenericService(DomainServiceOpts options,
   } else {
     service->localAddr = getNetworkAddress(LOCALHOST, 0);
   }
+  service->incomingDeserializer = options.incomingDeserializer;
+  service->outgoingSerializer = options.outgoingSerializer;
   service->start = startUdpService;
   service->stop = stopUdpService;
 }

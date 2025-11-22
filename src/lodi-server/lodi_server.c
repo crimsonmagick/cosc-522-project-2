@@ -20,7 +20,7 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DomainService *pkeDomain = NULL;
+static DomainClient *pkeClient = NULL;
 static struct sockaddr_in pkServerAddress;
 static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in lodiServerAddress;
@@ -60,7 +60,8 @@ int sendPushRequest(const unsigned int userID) {
  * Lodi Server infinite loop
  */
 int main() {
-  initPKEClientDomain(&pkeDomain);
+  initPKEClientDomain(&pkeClient);
+  pkeClient->base.start(&pkeClient->base);
   if (initLodiServerDomain(&lodiDomain) == ERROR) {
     printf("Failed to initialize Lodi Server Domain!\n");
     exit(-1);
@@ -83,7 +84,7 @@ int main() {
 
     unsigned int publicKey;
     bool authenticated = false;
-    if (getPublicKey(pkeDomain, &pkServerAddress, receivedMessage.userID, &publicKey) == ERROR) {
+    if (getPublicKey(pkeClient, &pkServerAddress, receivedMessage.userID, &publicKey) == ERROR) {
       printf("Failed to retrieve public key!\n");
     } else {
       printf("E 1. a. 1) a. and b. sent requestPublicKey, received responsePublicKey");

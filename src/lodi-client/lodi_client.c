@@ -22,7 +22,7 @@
 #define LOGIN_OPTION 2
 #define QUIT_OPTION 3
 
-static DomainService *pkeDomain = NULL;
+static DomainClient *pkeClient = NULL;
 static StreamDomainServiceHandle *lodiDomain = NULL;
 static struct sockaddr_in pkServerAddr;
 static struct sockaddr_in lodiServerAddr;
@@ -42,7 +42,8 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
  */
 int main() {
     // initialize domains
-    initPKEClientDomain(&pkeDomain);
+    initPKEClientDomain(&pkeClient);
+    pkeClient->base.start(&pkeClient->base);
     if (initLodiClientDomain(&lodiDomain) == DOMAIN_FAILURE) {
         printf("Failed to initialize Lodi Client Domain!\n");
         exit(-1);
@@ -176,7 +177,7 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
         publicKey
     };
 
-    if (toDatagramDomainHost(pkeDomain, (void *) &requestMessage, &pkServerAddr) == DOMAIN_FAILURE) {
+    if (toDatagramDomainHost(&pkeClient->base, (void *) &requestMessage, &pkServerAddr) == DOMAIN_FAILURE) {
         printf("Unable to send registration, aborting ...\n");
         return ERROR;
     }
@@ -185,7 +186,7 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
     PKServerToLodiClient responseMessage;
 
     struct sockaddr_in receiveAddress;
-    if (fromDatagramDomainHost(pkeDomain, &responseMessage, &receiveAddress) == DOMAIN_FAILURE) {
+    if (fromDatagramDomainHost(&pkeClient->base, &responseMessage, &receiveAddress) == DOMAIN_FAILURE) {
         printf("Failed to receive registration confirmation, aborting ...\n");
         return ERROR;
     }

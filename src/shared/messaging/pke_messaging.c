@@ -18,27 +18,27 @@
 /**
  * Gets the public key for a user for the PKE Server
  *
- * @param service Domain Service to use to retrieve public key
+ * @param client Domain Service to use to retrieve public key
  * @param pkeAddr Domain Service address
  * @param userID user to retrieve for
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
  */
-int getPublicKey(DomainService *service, struct sockaddr_in *pkeAddr, const unsigned int userID,
+int getPublicKey(DomainClient *client, struct sockaddr_in *pkeAddr, const unsigned int userID,
                  unsigned int *publicKey) {
   const PClientToPKServer requestMessage = {
     .messageType = requestKey,
     userID
   };
 
-  if (toDatagramDomainHost(service, (void *) &requestMessage, pkeAddr) == DOMAIN_FAILURE) {
+  if (toDatagramDomainHost(&client->base, (void *) &requestMessage, pkeAddr) == DOMAIN_FAILURE) {
     printf("Unable to get public key, aborting ...\n");
     return ERROR;
   }
 
   PKServerToLodiClient responseMessage;
   struct sockaddr_in receivedAddr;
-  if (fromDatagramDomainHost(service, &responseMessage, &receivedAddr) == DOMAIN_FAILURE) {
+  if (fromDatagramDomainHost(&client->base, &responseMessage, &receivedAddr) == DOMAIN_FAILURE) {
     printf("Failed to receive public key, aborting ...\n");
     return ERROR;
   }
@@ -90,7 +90,8 @@ int deserializeServerPK(char *serialized, PKServerToLodiClient *deserialized) {
   return MESSAGE_DESERIALIZER_SUCCESS;
 }
 
-int initPKEClientDomain(DomainService **service) {
+int initPKEClientDomain(DomainClient **client) {
+  const ServerConfig serverConfig = getServerConfig(PK);
   const MessageSerializer outgoing = {
     PK_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *)) serializeClientPK
@@ -99,18 +100,29 @@ int initPKEClientDomain(DomainService **service) {
     PK_SERVER_RESPONSE_SIZE,
     .deserializer = (int (*)(char *, void *)) deserializeServerPK
   };
-  const DomainServiceOpts options = {
-    .localPort = 0,
-    .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
-    .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming
+  const DomainClientOpts options = {
+    .baseOpts = {
+      .localPort = 0,
+      .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
+      .outgoingSerializer = outgoing,
+      .incomingDeserializer = incoming,
+      .connectionType = DATAGRAM
+    },
+    .remotePort = atoi(serverConfig.port),
+    .remoteHost = serverConfig.address
   };
 
-  DomainService *allocatedService = NULL;
-  if (startDatagramService(options, &allocatedService) != DOMAIN_SUCCESS) {
+  if (createClient(options, client) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  *service = allocatedService;
+  // PClientToPKServer testReq = {
+  //   .messageType = registerKey,
+  //   .userID = 213,
+  //   .publicKey = 1234
+  // };
+  // char buf
+  // outgoing.serializer(testReq, )
+
   return SUCCESS;
 }
 

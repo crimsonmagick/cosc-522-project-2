@@ -19,7 +19,7 @@
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
-static DomainService *pkeDomain = NULL;
+static DomainClient *pkeClient = NULL;
 static DomainService *tfaDomain = NULL;
 static struct sockaddr_in pkServerAddr;
 
@@ -31,7 +31,7 @@ static struct sockaddr_in pkServerAddr;
  */
 int main() {
     // initialize domains
-    initPKEClientDomain(&pkeDomain);
+    initPKEClientDomain(&pkeClient);
     initTFAServerDomain(&tfaDomain);
     pkServerAddr = getServerAddr(PK);
     // initialize repository
@@ -47,7 +47,7 @@ int main() {
 
         if (receivedMessage.messageType == registerTFA) {
             unsigned int publicKey;
-            getPublicKey(pkeDomain, &pkServerAddr, receivedMessage.userID, &publicKey);
+            getPublicKey(pkeClient, &pkServerAddr, receivedMessage.userID, &publicKey);
             printf("Req 1. a. 2) a) and b) - sent requestPublicKey and got responsePublicKey\n");
 
             // GOT PUBLIC KEY, NOW AUTHENTICATE
