@@ -1,25 +1,4 @@
-/**
- *  WIP service for managing interactions between clients and servers while maintaining an open socket and abstracting
- *  serialization and deserialization.
- */
-
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include "domain_datagram.h"
-#include "messaging/network.h"
-#include "shared.h"
-
-#define INACTIVE_SOCK (-1)
-
-static struct timeval createTimeout(const int timeoutMs) {
-  const long timeoutS = timeoutMs / 1000;
-  const long timeoutUs = timeoutMs % 1000 * 1000;
-  const struct timeval timeout = {.tv_sec = timeoutS, .tv_usec = timeoutUs};
-  return timeout;
-}
+#include "domain_shared.h"
 
 static int stopUdpService(DomainService *service) {
   if (service->sock >= 0 && close(service->sock) < 0) {
@@ -81,7 +60,7 @@ static int toDatagramDomainHost(DomainService *service,
  * @param hostAddr
  * @return
  */
-int fromDatagramDomainHost(DomainService *service,
+static int fromDatagramDomainHost(DomainService *service,
                            void *message,
                            struct sockaddr_in *hostAddr) {
   char *buf = malloc(service->incomingDeserializer.messageSize);
@@ -107,20 +86,6 @@ int fromDatagramDomainHost(DomainService *service,
   return status;
 }
 
-/**
- * @param service
- * @param timeoutMs
- * @return
- */
-static int changeTimeout(DomainService *service, const int timeoutMs) {
-  const struct timeval timeout = createTimeout(timeoutMs);
-  if (setsockopt(service->sock, SOL_SOCKET, SO_RCVTIMEO,
-                 &timeout, sizeof(timeout)) < 0) {
-    return DOMAIN_FAILURE;
-  }
-  return DOMAIN_SUCCESS;
-}
-
 static int datagramClientSend(DomainClient *self, UserMessage *toSend) {
   return toDatagramDomainHost((DomainService *) self, toSend, &self->remoteAddr);
 }
@@ -144,7 +109,7 @@ static int datagramClientReceive(DomainClient *self, UserMessage *toReceive) {
       printf("Warning... received message from unknown host. Discarding...\n");
       attempt += 1;
       resp = fromDatagramDomainHost((DomainService *) self, toReceive, &receiveAddr);
-    }
+           }
   }
   return resp;
 }
@@ -173,64 +138,5 @@ static int startUdpService(DomainService *service) {
     return DOMAIN_FAILURE;
   }
   service->sock = sock;
-  return DOMAIN_SUCCESS;
-}
-
-static void initializeGenericService(DomainServiceOpts options,
-                                     DomainService *service) {
-  service->sock = INACTIVE_SOCK;
-  service->connectionType = options.connectionType;
-  const int receiveTimeoutMs =
-      options.receiveTimeoutMs > 0 ? options.receiveTimeoutMs : 0;
-  service->receiveTimeout = createTimeout(receiveTimeoutMs);
-
-  if (options.localPort > 0) {
-    service->localAddr = getNetworkAddress(LOCALHOST, options.localPort);
-  } else {
-    service->localAddr = getNetworkAddress(LOCALHOST, 0);
-  }
-  service->incomingDeserializer = options.incomingDeserializer;
-  service->outgoingSerializer = options.outgoingSerializer;
-  service->start = startUdpService;
-  service->stop = stopUdpService;
-  service->changeTimeout = changeTimeout;
-  service->destroy = destroyDatagramService;
-}
-
-int createServer(DomainServiceOpts options, DomainServer **server) {
-  if (options.connectionType == STREAM) {
-    printf("Stream server not currently supported!\n");
-    return DOMAIN_FAILURE;
-  }
-  *server = calloc(1, sizeof(DomainServer));
-  if (*server == NULL) {
-    return DOMAIN_INIT_FAILURE;
-  }
-  (*server)->receive = datagramServerReceive;
-  (*server)->send = datagramServerSend;
-
-  DomainService *serviceRef = ((DomainService *) (*server));
-  initializeGenericService(options, serviceRef);
-
-  return DOMAIN_SUCCESS;
-}
-
-int createClient(DomainClientOpts options, DomainClient **client) {
-  if (options.baseOpts.connectionType == STREAM) {
-    printf("Stream client not currently supported!\n");
-    return DOMAIN_FAILURE;
-  }
-  *client = calloc(1, sizeof(DomainClient));
-  if (*client == NULL) {
-    return DOMAIN_FAILURE;
-  }
-
-  DomainService *serviceRef = (DomainService *) *client;
-  initializeGenericService(options.baseOpts, serviceRef);
-
-  (*client)->receive = datagramClientReceive;
-  (*client)->send = datagramClientSend;
-  (*client)->remoteAddr = getNetworkAddress(options.remoteHost, options.remotePort);
-
   return DOMAIN_SUCCESS;
 }
