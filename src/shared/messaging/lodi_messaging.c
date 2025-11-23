@@ -11,7 +11,7 @@
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
-#include "domain_stream.h"
+#include "domain_stream_old.h"
 
 /*
  * Boilerplate serdes functions

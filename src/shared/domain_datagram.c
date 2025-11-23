@@ -1,6 +1,6 @@
 #include "domain_shared.h"
 
-static int stopUdpService(DomainService *service) {
+static int stopDatagramService(DomainService *service) {
   if (service->sock >= 0 && close(service->sock) < 0) {
     return DOMAIN_FAILURE;
   }
@@ -15,7 +15,7 @@ static int stopUdpService(DomainService *service) {
  */
 static int destroyDatagramService(DomainService **service) {
   if (*service != NULL) {
-    if (stopUdpService(*service) == DOMAIN_FAILURE) {
+    if (stopDatagramService(*service) == DOMAIN_FAILURE) {
       return DOMAIN_FAILURE;
     }
     free(*service);
@@ -41,7 +41,7 @@ static int toDatagramDomainHost(DomainService *service,
       MESSAGE_SERIALIZER_FAILURE) {
     printf("Unable to serialize domain message\n");
     status = DOMAIN_FAILURE;
-  } else if (sendDatagramMessage(service->sock,
+  } else if (sendUdpMessage(service->sock,
                                  buf,
                                  service->outgoingSerializer.messageSize,
                                  hostAddr) == ERROR) {
@@ -71,7 +71,7 @@ static int fromDatagramDomainHost(DomainService *service,
 
   int status = DOMAIN_SUCCESS;
 
-  if (receiveDatagramMessage(service->sock,
+  if (receiveUdpMessage(service->sock,
                              buf,
                              service->incomingDeserializer.messageSize,
                              hostAddr)) {
@@ -130,9 +130,9 @@ static int datagramServerReceive(DomainServer *self, UserMessage *toReceive,
   return resp;
 }
 
-static int startUdpService(DomainService *service) {
+static int startDatagramService(DomainService *service) {
   const int sock = getSocket(&service->localAddr,
-                             &service->sendTimeout,
+                             &service->receiveTimeout,
                              service->connectionType);
   if (sock < 0) {
     return DOMAIN_FAILURE;

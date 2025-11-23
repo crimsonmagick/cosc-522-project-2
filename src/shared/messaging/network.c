@@ -1,5 +1,5 @@
 /**
-* UDP convenience functions, simplifying interactions with the network.
+* UDP and TCP convenience functions, simplifying interactions with the network.
 */
 
 #include <stdio.h>
@@ -17,7 +17,7 @@
 
 #define TIMEOUT_SECONDS 0
 
-#define MAX_PENDING 10
+#define MAX_PENDING 50
 
 /**
  * Gets a socket
@@ -87,7 +87,7 @@ struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short
  * @param clientAddress
  * @return
  */
-int receiveDatagramMessage(const int socket, char *message, const size_t messageSize,
+int receiveUdpMessage(const int socket, char *message, const size_t messageSize,
                            struct sockaddr_in *clientAddress) {
   socklen_t clientAddrLen = sizeof(*clientAddress);
   const ssize_t numBytes = recvfrom(socket, message, messageSize, 0,
@@ -119,7 +119,7 @@ int receiveDatagramMessage(const int socket, char *message, const size_t message
  * @param destinationAddress
  * @return
  */
-int sendDatagramMessage(const int socket, const char *messageBuffer, const size_t messageSize,
+int sendUdpMessage(const int socket, const char *messageBuffer, const size_t messageSize,
                         const struct sockaddr_in *destinationAddress) {
   const ssize_t numBytes = sendto(socket, messageBuffer, messageSize, 0, (struct sockaddr *) destinationAddress,
                                   sizeof(*destinationAddress));
@@ -137,7 +137,7 @@ int sendDatagramMessage(const int socket, const char *messageBuffer, const size_
   return SUCCESS;
 }
 
-int streamConnect(const int sock, const struct sockaddr_in *serverAddress) {
+int tcpConnect(const int sock, const struct sockaddr_in *serverAddress) {
   if (connect(sock, (struct sockaddr *) serverAddress, sizeof(struct sockaddr_in)) < 0) {
     printf("Value of errno: %d\n", errno);
     perror("Oh no");
@@ -146,7 +146,7 @@ int streamConnect(const int sock, const struct sockaddr_in *serverAddress) {
   return SUCCESS;
 }
 
-int streamListen(const int sock) {
+int tcpListen(const int sock) {
   printf("Attempting to listen...\n");
   if (listen(sock, MAX_PENDING) < 0) {
     printf("Failed to listen - Value of errno: %d\n", errno);
@@ -157,7 +157,7 @@ int streamListen(const int sock) {
   return SUCCESS;
 }
 
-int streamAccept(const int sock, struct sockaddr_in *clientAddress, int *clientSock) {
+int tcpAccept(const int sock, struct sockaddr_in *clientAddress, int *clientSock) {
   socklen_t clientLength = sizeof(struct sockaddr_in);
   printf("Attempting to accept...\n");
   if ((*clientSock = accept(sock, (struct sockaddr *) &clientAddress, &clientLength)) < 0) {
@@ -169,7 +169,7 @@ int streamAccept(const int sock, struct sockaddr_in *clientAddress, int *clientS
   return SUCCESS;
 }
 
-int sendStreamMessage(const int socket, const char *messageBuffer, const size_t messageSize) {
+int sendTcpMessage(const int socket, const char *messageBuffer, const size_t messageSize) {
   const ssize_t numBytes = send(socket, messageBuffer, messageSize, 0);
 
   if (numBytes < 0) {
@@ -185,7 +185,7 @@ int sendStreamMessage(const int socket, const char *messageBuffer, const size_t 
   return SUCCESS;
 }
 
-int receiveStreamMessage(const int socket, char *message, const size_t messageSize) {
+int receiveTcpMessage(const int socket, char *message, const size_t messageSize) {
   char *tempBuffer = malloc(messageSize);
   size_t offset = 0;
   ssize_t numBytes = recv(socket, tempBuffer, messageSize, 0);
@@ -203,6 +203,8 @@ int receiveStreamMessage(const int socket, char *message, const size_t messageSi
   if (numBytes < 0) {
     perror("Stream recv() failed");
     ret = ERROR;
+  } else if (numBytes == 0) {
+    ret = TERMINATED;
   }
   free(tempBuffer);
   return ret;

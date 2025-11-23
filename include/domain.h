@@ -10,6 +10,7 @@
 #define DOMAIN_INIT_FAILURE 2
 
 #define DEFAULT_TIMEOUT_MS 0
+#include <stdbool.h>
 
 typedef struct MessageSerializer {
   size_t messageSize;
@@ -51,7 +52,6 @@ typedef struct DomainService {
   int sock;
   enum ConnectionType connectionType;
   struct sockaddr_in localAddr;
-  struct timeval sendTimeout;
   struct timeval receiveTimeout;
 
   MessageSerializer outgoingSerializer;
@@ -66,6 +66,7 @@ typedef struct DomainService {
 typedef struct DomainClient {
   DomainService base;
   struct sockaddr_in remoteAddr;
+  bool isConnected;
   int (* send)(struct DomainClient *, UserMessage*);
   int (* receive)(struct DomainClient *, UserMessage*);
 } DomainClient;
@@ -73,10 +74,13 @@ typedef struct DomainClient {
 typedef struct DomainHandle {
   unsigned int userID;
   struct sockaddr_in host; // abstract with userID maps?
+  int clientSock;
 } DomainHandle;
 
 typedef struct DomainServer {
   DomainService base;
+  int *clientSocks;
+  int clientNum;
   int (* send)(struct DomainServer *self, UserMessage*, DomainHandle*);
   int (* receive)(struct DomainServer *self, UserMessage*, DomainHandle*);
 

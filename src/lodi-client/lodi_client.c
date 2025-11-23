@@ -198,7 +198,7 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
 
 
 int lodiPost(const unsigned int userID, const long timestamp, const long digitalSignature) {
-    const PClientToLodiServer request = {
+    PClientToLodiServer request = {
         .messageType = post,
         .userID = userID,
         .recipientID = 0,
@@ -208,7 +208,7 @@ int lodiPost(const unsigned int userID, const long timestamp, const long digital
     getStringInput("your Lodi message", request.message, 100);
 
 
-    if (toStreamDomainHost(lodiDomain, (void *) &request) == ERROR) {
+    if (toStreamDomainHost(lodiDomain, &request) == ERROR) {
         printf("Failed to send Post...\n");
         return ERROR;
     }
