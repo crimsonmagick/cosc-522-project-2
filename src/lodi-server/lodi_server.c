@@ -21,9 +21,7 @@
 #include "util/server_configs.h"
 
 static DomainClient *pkeClient = NULL;
-static struct sockaddr_in pkServerAddress;
 static DomainServer *lodiServer = NULL;
-static struct sockaddr_in lodiServerAddress;
 static DomainClient *tfaClient = NULL;
 static struct sockaddr_in tfaServerAddress;
 
@@ -71,8 +69,6 @@ int main() {
   }
   initTFAClientDomain(&tfaClient, false);
   tfaClient->base.start(&tfaClient->base);
-  pkServerAddress = getServerAddr(PK);
-  lodiServerAddress = getServerAddr(LODI);
   tfaServerAddress = getServerAddr(TFA);
 
   while (true) {

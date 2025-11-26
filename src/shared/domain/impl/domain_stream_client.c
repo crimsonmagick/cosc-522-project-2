@@ -38,8 +38,7 @@ static int streamClientReceive(DomainClient *self, UserMessage *toReceive) {
   if (!self->isConnected) {
     printf("Stream Client: Should always be connected before receiving, aborting...\n");
   }
-  streamClientFromHost(self, toReceive);
-  return DOMAIN_SUCCESS;
+  return streamClientFromHost(self, toReceive);
 }
 
 

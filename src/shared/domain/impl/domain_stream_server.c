@@ -36,12 +36,12 @@ static int setUpDescriptors(DomainServer *self, fd_set *allSocks) {
   int maxFd = self->base.sock;
   List *clients = self->clients;
   for (int i = 0; i < clients->length; i++) {
-    DomainHandle client;
-    clients->get(clients, i, &client);
-    if (client.clientSock > maxFd) {
-      maxFd = client.clientSock;
+    DomainHandle *client;
+    clients->get(clients, i, (void **) &client);
+    if (client->clientSock > maxFd) {
+      maxFd = client->clientSock;
     }
-    FD_SET(client.clientSock, allSocks);
+    FD_SET(client->clientSock, allSocks);
   }
   return maxFd;
 }
@@ -72,29 +72,26 @@ static int streamServerReceive(DomainServer *self, UserMessage *toReceive,
         printf("Stream Server: accept failed\n");
         return DOMAIN_FAILURE;
       }
-      DomainHandle client = {
-        .userID = NO_USER,
-        .clientSock = clientSock
-      };
-      self->clients->append(self->clients, &client);
+      DomainHandle *client = malloc(sizeof(DomainHandle));
+      client->userID = NO_USER;
+      client->clientSock = clientSock;
+      self->clients->append(self->clients, client);
     } else {
       for (int i = 0; i < self->clients->length; i++) {
-        DomainHandle client;
-        self->clients->get(self->clients, i, &client);
-        if (FD_ISSET(client.clientSock, &allSocks)) {
-          const int resp = streamServerFromHost(self, toReceive, client.clientSock);
+        DomainHandle *client;
+        self->clients->get(self->clients, i, (void **) &client);
+        if (FD_ISSET(client->clientSock, &allSocks)) {
+          const int resp = streamServerFromHost(self, toReceive, client->clientSock);
           if (resp == DOMAIN_SUCCESS) {
-            remote->userID = toReceive->userID;
-            remote->clientSock = client.clientSock;
-            if (self->clients->remove(self->clients, i, NULL) == ERROR
-                || self->clients->append(self->clients, remote) == ERROR) {
-              printf("Warning! Failed to update client information inside stream server\n");
-            }
+            client->userID = toReceive->userID;
+            remote->userID = client->userID;
+            remote->clientSock = client->clientSock;
           } else if (resp == TERMINATED) {
-            if (self->clients->remove(self->clients, i, remote) == ERROR) {
+            if (self->clients->remove(self->clients, i, (void **) &remote) == ERROR) {
               printf("Stream Server: remove failed\n");
             }
             close(remote->clientSock);
+            free(remote);
           }
           return resp;
         }
@@ -118,6 +115,6 @@ static int startStreamServer(DomainService *service) {
     return DOMAIN_FAILURE;
   }
   DomainServer *impl = (DomainServer *) service;
-  createList(&impl->clients, sizeof(DomainHandle));
+  createList(&impl->clients);
   return DOMAIN_SUCCESS;
 }

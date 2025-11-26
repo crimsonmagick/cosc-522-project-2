@@ -4,12 +4,12 @@
 
 typedef struct List {
   int length;
-  int (*append)(struct List * list, void *element);
-  int (*get)(struct List * list, int idx, void *element);
-  int (*remove)(struct List *, int idx, void *element);
+  int (*append)(struct List *list, void *element);
+  int (*get)(struct List *list, int idx, void **element);
+  int (*remove)(struct List *list, int idx, void **element);
   void (*destroy)(struct List **list);
 } List;
 
-int createList(List **list, size_t elementSize);
+int createList(List **list);
 
 #endif

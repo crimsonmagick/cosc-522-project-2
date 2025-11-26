@@ -255,7 +255,7 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
     if (lodiClient->send(lodiClient, (UserMessage *) &request) == DOMAIN_FAILURE) {
         printf("Failed to send login message, aborting...\n");
         status = ERROR;
-    } else if (lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
+    } else if (lodiClient->receive(lodiClient, (UserMessage *) &response) != SUCCESS) {
         printf("Failed to receive login message, aborting...\n");
         status = ERROR;
     } else {
