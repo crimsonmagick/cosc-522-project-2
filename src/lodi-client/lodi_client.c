@@ -15,6 +15,7 @@
 #include "messaging/pke_messaging.h"
 #include "messaging/lodi_messaging.h"
 #include "shared.h"
+#include "collections/list.h"
 #include "util/rsa.h"
 #include "util/server_configs.h"
 
@@ -23,7 +24,7 @@
 #define QUIT_OPTION 3
 
 static DomainClient *pkeClient = NULL;
-static StreamDomainServiceHandle *lodiDomain = NULL;
+static DomainClient *lodiClient = NULL;
 static struct sockaddr_in pkServerAddr;
 static struct sockaddr_in lodiServerAddr;
 
@@ -42,12 +43,12 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
  */
 int main() {
     // initialize domains
-    initPKEClientDomain(&pkeClient);
-    pkeClient->base.start(&pkeClient->base);
-    if (initLodiClientDomain(&lodiDomain) == DOMAIN_FAILURE) {
+    if (initLodiClientDomain(&lodiClient) == DOMAIN_FAILURE) {
         printf("Failed to initialize Lodi Client Domain!\n");
         exit(-1);
     }
+    initPKEClientDomain(&pkeClient);
+    pkeClient->base.start(&pkeClient->base);
     pkServerAddr = getServerAddr(PK);
     lodiServerAddr = getServerAddr(LODI);
 
@@ -198,6 +199,8 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
 
 
 int lodiPost(const unsigned int userID, const long timestamp, const long digitalSignature) {
+    lodiClient->base.start(&lodiClient->base);
+
     PClientToLodiServer request = {
         .messageType = post,
         .userID = userID,
@@ -208,21 +211,24 @@ int lodiPost(const unsigned int userID, const long timestamp, const long digital
     getStringInput("your Lodi message", request.message, 100);
 
 
-    if (toStreamDomainHost(lodiDomain, &request) == ERROR) {
+    int status = SUCCESS;
+    if (lodiClient->send(lodiClient, (UserMessage *) &request) == ERROR) {
         printf("Failed to send Post...\n");
-        return ERROR;
+        status = ERROR;
     }
 
     LodiServerMessage response;
 
-    if (fromStreamDomainHost(lodiDomain, &response) == DOMAIN_FAILURE) {
+    if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
         printf("Failed to receive Post response...\n");
-        return ERROR;
+        status = ERROR;
+    } else {
+        printf("Received ack of post: messageType=%u, userID=%u\n",
+               response.messageType, response.userID);
     }
 
-    printf("Received ack of post: messageType=%u, userID=%u\n",
-           response.messageType, response.userID);
-    return SUCCESS;
+    lodiClient->base.stop(&lodiClient->base);
+    return status;
 }
 
 /**
@@ -243,24 +249,24 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
         .message = "Hello from Lodi Client!"
     };
 
-    if (toStreamDomainHost(lodiDomain, (void *) &request) == ERROR) {
-        printf("Req A. c. Failed to send login message, aborting...\n");
-        return ERROR;
-    }
-
+    int status = SUCCESS;
     LodiServerMessage response;
 
-    if (fromStreamDomainHost(lodiDomain, &response) == DOMAIN_FAILURE) {
-        printf("Req A. 2. c. Failed to receive login message, aborting...\n");
-        return ERROR;
+    lodiClient->base.start(&lodiClient->base);
+    if (lodiClient->send(lodiClient, (UserMessage *) &request) == DOMAIN_FAILURE) {
+        printf("Failed to send login message, aborting...\n");
+        status = ERROR;
+    } else if (lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
+        printf("Failed to receive login message, aborting...\n");
+        status = ERROR;
+    } else {
+        printf("Login successful! Received: messageType=%u, userID=%u\n",
+               response.messageType, response.userID);
     }
-
-    printf("Req A 2. b. 1. Login successful! Received: messageType=%u, userID=%u\n",
-           response.messageType, response.userID);
-
+    lodiClient->base.stop(&lodiClient->base);
 
     int selected = 0;
-    while (true) {
+    while (status == SUCCESS && true) {
         printf("Please select from our many amazing Lodi options:\n");
         selected = getLodiLoopOption();
         if (selected == 1) {

@@ -22,7 +22,7 @@
 
 static DomainClient *pkeClient = NULL;
 static struct sockaddr_in pkServerAddress;
-static StreamDomainServiceHandle *lodiDomain = NULL;
+static DomainServer *lodiServer = NULL;
 static struct sockaddr_in lodiServerAddress;
 static DomainClient *tfaClient = NULL;
 static struct sockaddr_in tfaServerAddress;
@@ -61,23 +61,32 @@ int sendPushRequest(const unsigned int userID) {
 int main() {
   initPKEClientDomain(&pkeClient);
   pkeClient->base.start(&pkeClient->base);
-  if (initLodiServerDomain(&lodiDomain) == ERROR) {
+  if (initLodiServerDomain(&lodiServer) == ERROR) {
     printf("Failed to initialize Lodi Server Domain!\n");
     exit(-1);
   }
+  if (lodiServer->base.start(&lodiServer->base) == ERROR) {
+    printf("Failed to start Lodi Server!\n");
+    exit(-1);
+  }
   initTFAClientDomain(&tfaClient, false);
+  tfaClient->base.start(&tfaClient->base);
   pkServerAddress = getServerAddr(PK);
   lodiServerAddress = getServerAddr(LODI);
   tfaServerAddress = getServerAddr(TFA);
 
   while (true) {
     PClientToLodiServer receivedMessage;
-    const int receivedSuccess = fromStreamDomainHost(lodiDomain, &receivedMessage);
+    DomainHandle remoteHandle;
+    const int receivedSuccess = lodiServer->receive(lodiServer, (UserMessage *) &receivedMessage, &remoteHandle);
 
     if (receivedSuccess == DOMAIN_FAILURE) {
       printf("Failed to handle incoming PClientToLodiServer message.\n");
-      stopStreamService(&lodiDomain);
-      exit(-1);
+      continue;
+    }
+    if (receivedSuccess == TERMINATED) {
+      printf("Connection terminated for userId=%d, socket %d\n", remoteHandle.userID, remoteHandle.clientSock);
+      continue;
     }
     printf("Req E. 1. Received login message from Lodi client\n");
 
@@ -127,7 +136,7 @@ int main() {
       .message = "Hello from Lodi Server!"
     };
 
-    const int sendSuccess = toStreamDomainHost(lodiDomain, &responseMessage);
+    const int sendSuccess = lodiServer->send(lodiServer, (UserMessage *) &responseMessage, &remoteHandle);
     if (sendSuccess == ERROR) {
       printf("Error while sending Lodi login response.\n");
     }

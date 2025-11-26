@@ -12,6 +12,8 @@
 #define DEFAULT_TIMEOUT_MS 0
 #include <stdbool.h>
 
+#include "collections/list.h"
+
 typedef struct MessageSerializer {
   size_t messageSize;
 
@@ -79,8 +81,7 @@ typedef struct DomainHandle {
 
 typedef struct DomainServer {
   DomainService base;
-  int *clientSocks;
-  int clientNum;
+  List * clients;
   int (* send)(struct DomainServer *self, UserMessage*, DomainHandle*);
   int (* receive)(struct DomainServer *self, UserMessage*, DomainHandle*);
 

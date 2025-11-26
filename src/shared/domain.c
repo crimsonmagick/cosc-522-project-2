@@ -6,7 +6,8 @@
 
 #include "domain_shared.h"
 #include "domain_datagram.c"
-#include "domain_stream.c"
+#include "domain_stream_client.c"
+#include "domain_stream_server.c"
 #include "messaging/network.h"
 
 static struct timeval createTimeout(const int timeoutMs) {
@@ -47,29 +48,27 @@ static void initializeGenericService(DomainServiceOpts options,
   }
   service->incomingDeserializer = options.incomingDeserializer;
   service->outgoingSerializer = options.outgoingSerializer;
-  service->start = startDatagramService;
-  service->stop = stopDatagramService;
   service->changeTimeout = changeTimeout;
   service->destroy = destroyDatagramService;
 }
 
-int createServer(DomainServiceOpts options, DomainServer **server) {
-  if (options.connectionType == STREAM) {
-    printf("Stream server not currently supported!\n");
-    return DOMAIN_FAILURE;
-  }
+int createServer(const DomainServiceOpts options, DomainServer **server) {
   *server = calloc(1, sizeof(DomainServer));
   if (*server == NULL) {
     return DOMAIN_INIT_FAILURE;
   }
   if (options.connectionType == DATAGRAM) {
+    (*server)->base.start = startDatagramService;
+    (*server)->base.stop = stopDatagramService;
     (*server)->receive = datagramServerReceive;
     (*server)->send = datagramServerSend;
   } else {
-    (*server)->clientNum = 0;
+    (*server)->base.start = startStreamServer;
+    (*server)->base.stop = stopStreamService;
     (*server)->receive = streamServerReceive;
     (*server)->send = streamServerSend;
   }
+  (*server)->clients = NULL;
 
   DomainService *serviceRef = (DomainService *) *server;
   initializeGenericService(options, serviceRef);
@@ -89,10 +88,14 @@ int createClient(DomainClientOpts options, DomainClient **client) {
   if (options.baseOpts.connectionType == DATAGRAM) {
     (*client)->receive = datagramClientReceive;
     (*client)->send = datagramClientSend;
+    (*client)->base.start = startDatagramService;
+    (*client)->base.stop = stopDatagramService;
   } else {
     (*client)->receive = streamClientReceive;
     (*client)->send = streamClientSend;
     (*client)->isConnected = false;
+    (*client)->base.start = startStreamClient;
+    (*client)->base.stop = stopStreamClient;
   }
   (*client)->remoteAddr = getNetworkAddress(options.remoteHost, options.remotePort);
 

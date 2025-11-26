@@ -5,7 +5,7 @@
 #ifndef COSC522_LODI_SHARED_H
 #define COSC522_LODI_SHARED_H
 
-#define TERMINATED 1
+#define TERMINATED 2
 #define SUCCESS 0
 #define ERROR (-1)
 

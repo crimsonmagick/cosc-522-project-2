@@ -8,6 +8,8 @@
 
 #include "messaging/lodi_messaging.h"
 
+#include <stdlib.h>
+
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
@@ -62,7 +64,7 @@ int deserializeServerLoginLodi(char *serialized, LodiServerMessage *deserialized
  * Boilerplate DomainService constructor functions
  */
 
-int initLodiClientDomain(StreamDomainServiceHandle **handle) {
+int initLodiClientDomain(DomainClient **domainClient) {
   const MessageSerializer outgoing = {
     LODI_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *)) serializeClientLodi
@@ -72,28 +74,28 @@ int initLodiClientDomain(StreamDomainServiceHandle **handle) {
     .deserializer = (int (*)(char *, void *)) deserializeServerLoginLodi
   };
 
-  char * remotePort = getServerConfig(LODI).port;
-  struct sockaddr_in remote = getServerAddr(LODI);
+  char *remotePort = getServerConfig(LODI).port;
+  char *remote = getServerConfig(LODI).address;
 
-  const StreamDomainServiceOpts options = {
-    .localPort = 0,
-    .timeoutMs = DEFAULT_TIMEOUT_MS,
-    .remotePort = remotePort,
-    .remoteHost = remote,
-    .outgoingSerializer = outgoing,
-    .incomingDeserializer = incoming,
-    .isServer = false
+  const DomainClientOpts options = {
+    .baseOpts = {
+      .localPort = -1,
+      .receiveTimeoutMs = 0,
+      .connectionType = STREAM,
+      .outgoingSerializer = outgoing,
+      .incomingDeserializer = incoming
+    },
+    .remotePort = atoi(remotePort),
+    .remoteHost = remote
   };
 
-  StreamDomainServiceHandle *allocatedHandle = NULL;
-  if (startStreamService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (createClient(options, domainClient) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  *handle = allocatedHandle;
   return SUCCESS;
 }
 
-int initLodiServerDomain(StreamDomainServiceHandle **handle) {
+int initLodiServerDomain(DomainServer **server) {
   const ServerConfig serverConfig = getServerConfig(LODI);
   const MessageSerializer outgoing = {
     LODI_SERVER_RESPONSE_SIZE,
@@ -104,18 +106,16 @@ int initLodiServerDomain(StreamDomainServiceHandle **handle) {
     .deserializer = (int (*)(char *, void *)) deserializeClientLodi
   };
 
-  const StreamDomainServiceOpts options = {
-    .localPort = serverConfig.port,
-    .timeoutMs = 1000 * 60 * 10,
+  const DomainServiceOpts options = {
+    .localPort = atoi(serverConfig.port),
+    .receiveTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming,
-    .isServer = true
+    .connectionType = STREAM
   };
 
-  StreamDomainServiceHandle *allocatedHandle = NULL;
-  if (startStreamService(options, &allocatedHandle) != DOMAIN_SUCCESS) {
+  if (createServer(options, server) != DOMAIN_SUCCESS) {
     return ERROR;
   }
-  *handle = allocatedHandle;
   return SUCCESS;
 }

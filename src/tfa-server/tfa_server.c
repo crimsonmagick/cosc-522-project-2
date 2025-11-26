@@ -133,7 +133,7 @@ int main() {
             printf("Req C. 3. a. sent pushTFA message\n");
 
             TFAClientOrLodiServerToTFAServer pushResponse;
-            int receivedSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushResponse, &tfaClientHandle);
+            int receivedSuccess = tfaServer->receive(tfaServer, (UserMessage *) &pushResponse, &tfaClientHandle);
             if (receivedSuccess == ERROR) {
                 printf("Error while receiving TFA client push auth message.\n");
                 continue;
@@ -149,7 +149,7 @@ int main() {
                 responseAuth,
                 receivedMessage.userID
             };
-            sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushNotificationResponse, &tfaClientHandle);
+            sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushNotificationResponse, &receiveHandle);
             if (sendSuccess == ERROR) {
                 printf("Error while sending push response to Lodi server\n");
             }
