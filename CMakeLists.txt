@@ -5,9 +5,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
-file(GLOB COMMON_SRC CONFIGURE_DEPENDS
+file(GLOB_RECURSE COMMON_SRC CONFIGURE_DEPENDS
     src/shared/*.c
-    src/shared/**/*.c
 )
 include_directories(${CMAKE_SOURCE_DIR}/include)
 

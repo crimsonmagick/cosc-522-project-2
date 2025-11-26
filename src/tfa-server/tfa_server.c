@@ -8,14 +8,12 @@
 
 #include <stdio.h>
 #include <arpa/inet.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
 
 #include "shared.h"
 #include "registration_repository.h"
-#include "messaging/tfa_messaging.h"
-#include "messaging/pke_messaging.h"
+#include "domain/tfa.h"
+#include "../../include/domain/pke.h"
 #include "util/rsa.h"
 #include "util/server_configs.h"
 

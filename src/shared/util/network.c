@@ -11,7 +11,7 @@
 
 
 #include "shared.h"
-#include "messaging/network.h"
+#include "../../../include/util/network.h"
 
 #include <stdlib.h>
 

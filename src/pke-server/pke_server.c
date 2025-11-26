@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "messaging/pke_messaging.h"
+#include "../../include/domain/pke.h"
 #include "key_repository.h"
 #include "shared.h"
 

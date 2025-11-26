@@ -34,7 +34,7 @@ typedef struct {
 
 #include <netinet/in.h>
 #include "domain/domain.h"
-#include "messaging/network.h"
+#include "../util/network.h"
 
 typedef struct DomainServiceOpts {
   int localPort; // optional

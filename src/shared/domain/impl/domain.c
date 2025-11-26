@@ -8,7 +8,7 @@
 #include "domain_datagram.c"
 #include "domain_stream_client.c"
 #include "domain_stream_server.c"
-#include "messaging/network.h"
+#include "util/network.h"
 
 static struct timeval createTimeout(const int timeoutMs) {
   const long timeoutS = timeoutMs / 1000;

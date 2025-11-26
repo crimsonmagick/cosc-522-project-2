@@ -13,10 +13,10 @@
 #include <stdbool.h>
 
 #include "message_repository.h"
-#include "messaging/lodi_messaging.h"
+#include "../../include/domain/lodi.h"
 #include "shared.h"
-#include "messaging/pke_messaging.h"
-#include "messaging/tfa_messaging.h"
+#include "domain/pke.h"
+#include "domain/tfa.h"
 #include "util/rsa.h"
 #include "util/server_configs.h"
 

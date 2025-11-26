@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 
-#include "messaging/pke_messaging.h"
+#include "../../../include/domain/pke.h"
 
 #include "domain/domain.h"
 #include "shared.h"

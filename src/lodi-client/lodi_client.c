@@ -12,10 +12,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "messaging/pke_messaging.h"
-#include "messaging/lodi_messaging.h"
+#include "domain/pke.h"
+#include "../../include/domain/lodi.h"
 #include "shared.h"
-#include "collections/list.h"
 #include "util/rsa.h"
 #include "util/server_configs.h"
 

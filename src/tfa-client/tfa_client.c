@@ -14,7 +14,7 @@
 #include <stdbool.h>
 
 #include "domain/domain.h"
-#include "messaging/tfa_messaging.h"
+#include "../../include/domain/tfa.h"
 #include "shared.h"
 #include "util/rsa.h"
 #include "util/server_configs.h"
