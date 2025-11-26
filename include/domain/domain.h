@@ -33,7 +33,7 @@ typedef struct {
 } UserMessage;
 
 #include <netinet/in.h>
-#include "domain.h"
+#include "domain/domain.h"
 #include "messaging/network.h"
 
 typedef struct DomainServiceOpts {

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "domain.h"
+#include "domain/domain.h"
 #include "shared.h"
 
 #define INACTIVE_SOCK (-1)

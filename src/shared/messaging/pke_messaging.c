@@ -10,7 +10,7 @@
 
 #include "messaging/pke_messaging.h"
 
-#include "domain.h"
+#include "domain/domain.h"
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"

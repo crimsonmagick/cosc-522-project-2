@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "domain.h"
+#include "domain/domain.h"
 #include "messaging/lodi_messaging.h"
 #include "shared.h"
 #include "util/buffers.h"

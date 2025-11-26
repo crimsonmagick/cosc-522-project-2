@@ -6,7 +6,7 @@
 #ifndef LODI_LODIMESSAGING_H
 #define LODI_LODIMESSAGING_H
 
-#include "domain.h"
+#include "domain/domain.h"
 
 #define LODI_MESSAGE_LENGTH 100
 

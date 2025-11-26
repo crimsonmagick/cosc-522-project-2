@@ -13,7 +13,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include "domain.h"
+#include "domain/domain.h"
 #include "messaging/tfa_messaging.h"
 #include "shared.h"
 #include "util/rsa.h"
