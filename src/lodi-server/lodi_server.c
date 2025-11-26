@@ -12,8 +12,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "follower_repository.h"
 #include "message_repository.h"
-#include "../../include/domain/lodi.h"
+#include "domain/lodi.h"
 #include "shared.h"
 #include "domain/pke.h"
 #include "domain/tfa.h"
@@ -68,6 +69,8 @@ int main() {
     exit(-1);
   }
   initTFAClientDomain(&tfaClient, false);
+  initMessageRepository();
+  initFollowerRepository();
   tfaClient->base.start(&tfaClient->base);
   tfaServerAddress = getServerAddr(TFA);
 
@@ -124,6 +127,26 @@ int main() {
         printf("Message %d: %s\n", i, messages[i]);
       }
       responseMessageType = ackPost;
+    } else if (receivedMessage.messageType == follow) {
+      addFollower(receivedMessage.recipientID, receivedMessage.userID);
+      List *followers;
+      int follwGetRt = getFollowers(receivedMessage.recipientID, &followers);
+      printf("Followers for idolId=%u\n", receivedMessage.recipientID);
+      for (int i = 0; i < followers->length && follwGetRt == SUCCESS; i++) {
+        int *userId;
+        followers->get(followers, i, (void **) &userId);
+        printf("userId=%u\n", *userId);
+      }
+    } else if (receivedMessage.messageType == unfollow) {
+      removeFollower(receivedMessage.recipientID, receivedMessage.userID);
+      List *followers;
+      int getRv = getFollowers(receivedMessage.recipientID, &followers);
+      printf("Followers for idolId=%u\n", receivedMessage.recipientID);
+      for (int i = 0; i < followers->length && getRv == SUCCESS; i++) {
+        int *userId;
+        followers->get(followers, i, (void **) &userId);
+        printf("userId=%u\n", *userId);
+      }
     }
 
     LodiServerMessage responseMessage = {

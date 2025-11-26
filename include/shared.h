@@ -8,5 +8,6 @@
 #define TERMINATED 2
 #define SUCCESS 0
 #define ERROR (-1)
+#define NOT_FOUND (3)
 
 #endif

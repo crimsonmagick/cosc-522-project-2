@@ -46,6 +46,8 @@ add_executable(lodi_server
     src/lodi-server/message_repository.h
     src/lodi-server/message_repository.c
     ${COMMON_SRC}
+    src/lodi-server/follower_repository.h
+    src/lodi-server/follower_repository.c
 )
 add_executable(pke_server
     src/pke-server/pke_server.c

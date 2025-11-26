@@ -35,7 +35,7 @@ int main() {
     tfaServer->base.start(&tfaServer->base);
     pkServerAddr = getServerAddr(PK);
     // initialize repository
-    initRepository();
+    initMessageRepository();
 
     while (true) {
 

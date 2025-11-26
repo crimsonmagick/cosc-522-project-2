@@ -8,7 +8,7 @@
 /**
  * Constructor function
  */
-void initRepository();
+void initMessageRepository();
 
 /**
  * Persists a public key

@@ -25,7 +25,9 @@ static int map_get(IntMap *map, int key, void **element) {
 
     IntMapImpl *impl = (IntMapImpl *)map;
     List *list = impl->buckets[hash(key)];
-    if (!list) return ERROR;
+    if (!list) {
+        return NOT_FOUND;
+    }
 
     KeyValue *kv;
     for (int i = 0; i < list->length; i++) {
@@ -34,7 +36,7 @@ static int map_get(IntMap *map, int key, void **element) {
             return SUCCESS;
         }
     }
-    return ERROR;
+    return NOT_FOUND;
 }
 
 static int map_add(IntMap *map, int key, void *element) {

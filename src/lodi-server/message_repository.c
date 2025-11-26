@@ -21,7 +21,7 @@ int messageCounts[SIZE];
 /**
  *  Constructor
  */
-void initRepository() {
+void initMessageRepository() {
   memset(messages, 0, SIZE * sizeof(char **));
   memset(messageCounts, 0, SIZE * sizeof(int));
 }

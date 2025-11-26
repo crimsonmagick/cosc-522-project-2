@@ -21,7 +21,7 @@ static DomainServer *pkeServer = NULL;
 int main() {
   initPKEServerDomain(&pkeServer);
   pkeServer->base.start(&pkeServer->base);
-  initRepository();
+  initMessageRepository();
 
   while (true) {
     DomainHandle receiveHandle;

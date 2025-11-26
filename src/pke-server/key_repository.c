@@ -14,7 +14,7 @@ unsigned int keyStore[SIZE];
 /**
  * Constructor function
  */
-void initRepository() {
+void initMessageRepository() {
   memset(keyStore, 0, SIZE * sizeof(unsigned int));
 }
 

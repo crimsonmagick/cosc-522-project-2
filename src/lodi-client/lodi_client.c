@@ -111,11 +111,13 @@ int getMainOption() {
 /**
  * Gets user selected Lodi option after login. Fulfills A. 3.
  *
- * @return the selected option (it's gonna be 1!)
+ * @return the selected option
  */
 int getLodiLoopOption() {
     printf("1. Post a message\n");
-    printf("2. Logout\n");
+    printf("2. Follow an idol\n");
+    printf("3. Unfollow an idol\n");
+    printf("4. Logout\n");
 
     int selected = 0;
     char line[64];
@@ -230,6 +232,74 @@ int lodiPost(const unsigned int userID, const long timestamp, const long digital
     return status;
 }
 
+int lodiFollow(const unsigned int userID, const long timestamp, const long digitalSignature) {
+    lodiClient->base.start(&lodiClient->base);
+
+    unsigned int idolId = getLongInput("idolId");
+
+    PClientToLodiServer request = {
+        .messageType = follow,
+        .userID = userID,
+        .recipientID = idolId,
+        .timestamp = timestamp,
+        .digitalSig = digitalSignature
+    };
+
+    int status = SUCCESS;
+    if (lodiClient->send(lodiClient, (UserMessage *) &request) == ERROR) {
+        printf("Failed to send Follow message...\n");
+        status = ERROR;
+    }
+
+    LodiServerMessage response;
+
+    if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
+        printf("Failed to receive Follow response...\n");
+        status = ERROR;
+    } else {
+        printf("Received ack of follow: messageType=%u, userID=%u\n",
+               response.messageType, response.userID);
+    }
+
+    lodiClient->base.stop(&lodiClient->base);
+    return status;
+}
+
+int lodiUnfollow(const unsigned int userID, const long timestamp, const long digitalSignature) {
+    lodiClient->base.start(&lodiClient->base);
+
+    unsigned int idolId = getLongInput("idolId");
+
+    PClientToLodiServer request = {
+        .messageType = unfollow,
+        .userID = userID,
+        .recipientID = idolId,
+        .timestamp = timestamp,
+        .digitalSig = digitalSignature
+    };
+
+    int status = SUCCESS;
+    if (lodiClient->send(lodiClient, (UserMessage *) &request) == ERROR) {
+        printf("Failed to send unfollow message...\n");
+        status = ERROR;
+    }
+
+    LodiServerMessage response;
+
+    if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
+        printf("Failed to receive unfollow response...\n");
+        status = ERROR;
+    } else {
+        printf("Received ack of unfollow: messageType=%u, userID=%u\n",
+               response.messageType, response.userID);
+    }
+
+    lodiClient->base.stop(&lodiClient->base);
+    return status;
+}
+
+
+
 /**
  * Authenticates user, logging into the Lodi server. Fulfills requirement A. 2.
  *
@@ -272,6 +342,11 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
             lodiPost(userID, timestamp, digitalSignature);
             printf("Message posted successfully!\n");
         } else if (selected == 2) {
+            lodiFollow(userID, timestamp, digitalSignature);
+        } else if (selected == 3) {
+            lodiUnfollow(userID, timestamp, digitalSignature);
+            break;
+        } else if (selected == 4) {
             // TODO send logout message
             break;
         } else {

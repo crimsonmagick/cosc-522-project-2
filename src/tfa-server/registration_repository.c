@@ -19,7 +19,7 @@ unsigned short portStore[SIZE];
 /**
  *  Constructor
  */
-void initRepository() {
+void initMessageRepository() {
   memset(addressStore, 0, SIZE * sizeof(struct in_addr));
   memset(portStore, 0, SIZE * sizeof(unsigned short));
 }
