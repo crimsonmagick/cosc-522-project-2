@@ -4,16 +4,14 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "domain.h"
 #include "messaging/lodi_messaging.h"
-
-#include <stdlib.h>
-
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
-#include "domain_stream_old.h"
 
 /*
  * Boilerplate serdes functions

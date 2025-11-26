@@ -6,11 +6,12 @@
 #ifndef LODI_LODIMESSAGING_H
 #define LODI_LODIMESSAGING_H
 
+#include "domain.h"
+
 #define LODI_MESSAGE_LENGTH 100
 
 #define LODI_CLIENT_REQUEST_SIZE ((3 * sizeof(uint32_t) + 2 * sizeof(uint64_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
 #define LODI_SERVER_RESPONSE_SIZE ((2 * sizeof(uint32_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
-#include "domain_stream_old.h"
 
 enum LodiClientMessageType {
   login, post, feed, follow, unfollow, logout
