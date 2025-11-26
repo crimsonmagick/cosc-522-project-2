@@ -130,17 +130,25 @@ int main() {
     } else if (receivedMessage.messageType == follow) {
       addFollower(receivedMessage.recipientID, receivedMessage.userID);
       List *followers;
-      int follwGetRt = getFollowers(receivedMessage.recipientID, &followers);
+      int follwGetRt = getIdolFollowers(receivedMessage.recipientID, &followers);
       printf("Followers for idolId=%u\n", receivedMessage.recipientID);
       for (int i = 0; i < followers->length && follwGetRt == SUCCESS; i++) {
         int *userId;
         followers->get(followers, i, (void **) &userId);
-        printf("userId=%u\n", *userId);
+        printf("followerId=%u\n", *userId);
+      }
+      List *idols;
+      int idolGetRt = getFollowerIdols(receivedMessage.userID, &idols);
+      printf("Idols for followerId=%u\n", receivedMessage.userID);
+      for (int i = 0; i < idols->length && idolGetRt == SUCCESS; i++) {
+        int *idolId;
+        idols->get(idols, i, (void **) &idolId);
+        printf("idolId=%u\n", *idolId);
       }
     } else if (receivedMessage.messageType == unfollow) {
       removeFollower(receivedMessage.recipientID, receivedMessage.userID);
       List *followers;
-      int getRv = getFollowers(receivedMessage.recipientID, &followers);
+      int getRv = getIdolFollowers(receivedMessage.recipientID, &followers);
       printf("Followers for idolId=%u\n", receivedMessage.recipientID);
       for (int i = 0; i < followers->length && getRv == SUCCESS; i++) {
         int *userId;

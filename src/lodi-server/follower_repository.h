@@ -8,5 +8,7 @@ int addFollower(unsigned int idolId, unsigned int followerId);
 
 int removeFollower(unsigned int idolId, unsigned int followerId);
 
-int getFollowers(const unsigned int idolId, List **followers);
+int getIdolFollowers(const unsigned int idolId, List **followers);
+
+int getFollowerIdols(const unsigned int followerId, List **idols);
 #endif

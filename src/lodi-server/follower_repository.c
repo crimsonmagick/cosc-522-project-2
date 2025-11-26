@@ -13,18 +13,47 @@
 #include "shared.h"
 
 static IntMap *idolMap = NULL;
+static IntMap *followerMap = NULL;
 
 /**
  *  Constructor
  */
 void initFollowerRepository() {
   createMap(&idolMap);
+  createMap(&followerMap);
 }
 
-int addFollower(unsigned int idolId, unsigned int followerId) {
-  if (!idolMap) {
+static int addFollowerIdol(unsigned int idolId, unsigned int followerId) {
+  List *idols = NULL;
+  int rt = followerMap->get(followerMap, followerId, (void **) &idols);
+  if (rt == ERROR) {
     return ERROR;
   }
+  if (rt == NOT_FOUND) {
+    if (createList(&idols) != SUCCESS) {
+      return ERROR;
+    }
+    followerMap->add(followerMap, followerId, idols);
+  }
+  for (int i = 0; i < idols->length; i++) {
+    int *idol= NULL;
+    idols->get(idols, i, (void **) &idol);
+    if (*idol == idolId) {
+      printf("Warning - idolId=%u already added to idol list for followerId=%u\n",
+             idolId, followerId);
+      return SUCCESS;
+    }
+  }
+  int *persistedIdolId = malloc(sizeof(unsigned int));
+  if (!persistedIdolId) {
+    return ERROR;
+  }
+  *persistedIdolId = idolId;
+  idols->append(idols, persistedIdolId);
+  return SUCCESS;
+}
+
+static int addIdolFollower(unsigned int idolId, unsigned int followerId) {
   List *followers = NULL;
   int rt = idolMap->get(idolMap, idolId, (void **) &followers);
   if (rt == ERROR) {
@@ -52,6 +81,19 @@ int addFollower(unsigned int idolId, unsigned int followerId) {
   *persistedFollowerId = followerId;
   followers->append(followers, persistedFollowerId);
   return SUCCESS;
+}
+
+
+
+int addFollower(unsigned int idolId, unsigned int followerId) {
+  if (!idolMap) {
+    return ERROR;
+  }
+  int ret;
+  if ((ret = addIdolFollower(idolId, followerId) != SUCCESS)) {
+    return ret;
+  }
+  return addFollowerIdol(idolId, followerId);
 }
 
 int removeFollower(unsigned int idolId, unsigned int followerId) {
@@ -85,7 +127,7 @@ int removeFollower(unsigned int idolId, unsigned int followerId) {
 }
 
 
-int getFollowers(const unsigned int idolId, List **followers) {
+int getIdolFollowers(const unsigned int idolId, List **followers) {
   if (!idolMap) {
     return ERROR;
   }
@@ -94,6 +136,20 @@ int getFollowers(const unsigned int idolId, List **followers) {
     return rt;
   }
   if ((*followers)->length == 0) {
+    return NOT_FOUND;
+  }
+  return SUCCESS;
+}
+
+int getFollowerIdols(const unsigned int followerId, List **idols) {
+  if (!followerMap) {
+    return ERROR;
+  }
+  const int rt = followerMap->get(followerMap, followerId, (void **) idols);
+  if (rt == ERROR || rt == NOT_FOUND) {
+    return rt;
+  }
+  if ((*idols)->length == 0) {
     return NOT_FOUND;
   }
   return SUCCESS;
