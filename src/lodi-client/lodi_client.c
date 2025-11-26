@@ -7,11 +7,16 @@
  *    See lodiLogin() for the implementation of this functionality.
  **/
 
+#include <signal.h>
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <bits/signum-generic.h>
+#include <sys/wait.h>
 
+#include "print_feed.h"
 #include "domain/pke.h"
 #include "../../include/domain/lodi.h"
 #include "shared.h"
@@ -34,6 +39,22 @@ unsigned long getLongInput(char *inputName);
 int registerPublicKey(unsigned int userID, unsigned int publicKey);
 
 int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
+
+
+int startStreamFeed(unsigned int userId, unsigned int timestamp, unsigned int digitalsig) {
+    int pid = fork();
+    if (pid == 0) {
+        handle_feed(12, 5, 12);
+    }
+    return pid;
+}
+
+void stopStreamFeed(int pid) {
+    printf("Killing stream child with pid=%d...\n", pid);
+    kill(pid, SIGTERM);
+    waitpid(pid, NULL, 0);
+    printf("Killed child!\n");
+}
 
 /**
  * Main loop for Lodi Client
@@ -299,7 +320,6 @@ int lodiUnfollow(const unsigned int userID, const long timestamp, const long dig
 }
 
 
-
 /**
  * Authenticates user, logging into the Lodi server. Fulfills requirement A. 2.
  *
@@ -335,6 +355,13 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
     lodiClient->base.stop(&lodiClient->base);
 
     int selected = 0;
+    int pid;
+    if (status == SUCCESS) {
+        pid = startStreamFeed(userID, timestamp, digitalSignature);
+    } else {
+        printf("Unable to stream feed, exiting from login...\n");
+        return ERROR;
+    }
     while (status == SUCCESS && true) {
         printf("Please select from our many amazing Lodi options:\n");
         selected = getLodiLoopOption();
@@ -348,6 +375,7 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
             break;
         } else if (selected == 4) {
             // TODO send logout message
+            stopStreamFeed(pid);
             break;
         } else {
             printf("Please enter a valid option\n");
