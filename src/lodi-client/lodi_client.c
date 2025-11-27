@@ -44,7 +44,7 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
 int startStreamFeed(unsigned int userId, unsigned int timestamp, unsigned int digitalsig) {
     int pid = fork();
     if (pid == 0) {
-        handle_feed(12, 5, 12);
+        handle_feed(userId, timestamp, digitalsig);
     }
     return pid;
 }

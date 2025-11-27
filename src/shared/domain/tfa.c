@@ -80,10 +80,10 @@ int initTFAClientDomain(DomainClient **client, const bool bindToPort) {
     .remotePort = atoi(serverConfig.port),
     .remoteHost = serverConfig.address
   };
-  if (bindToPort) {
-    const ServerConfig server_config = getServerConfig(TFA_CLIENT);
-    options.baseOpts.localPort = atoi(server_config.port);
-  }
+  // if (bindToPort) {
+  //   const ServerConfig server_config = getServerConfig(TFA_CLIENT);
+  //   options.baseOpts.localPort = atoi(server_config.port);
+  // }
 
   if (createClient(options, client) != DOMAIN_SUCCESS) {
     return ERROR;

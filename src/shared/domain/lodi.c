@@ -32,6 +32,7 @@ int serializeServerLoginLodi(LodiServerMessage *toSerialize, char *serialized) {
   size_t offset = 0;
   appendUint32(serialized, &offset, toSerialize->messageType);
   appendUint32(serialized, &offset, toSerialize->userID);
+  appendUint32(serialized, &offset, toSerialize->recipientID);
   memcpy(serialized + offset, toSerialize->message, LODI_MESSAGE_LENGTH * sizeof(char));
 
   return MESSAGE_SERIALIZER_SUCCESS;
@@ -53,6 +54,7 @@ int deserializeServerLoginLodi(char *serialized, LodiServerMessage *deserialized
   size_t offset = 0;
   deserialized->messageType = getUint32(serialized, &offset);
   deserialized->userID = getUint32(serialized, &offset);
+  deserialized->recipientID= getUint32(serialized, &offset);
   memcpy(deserialized->message, serialized + offset, LODI_MESSAGE_LENGTH * sizeof(char));
 
   return MESSAGE_DESERIALIZER_SUCCESS;
