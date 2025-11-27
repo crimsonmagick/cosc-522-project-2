@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "follower_repository.h"
+#include "listener_repository.h"
 #include "message_repository.h"
 #include "domain/lodi.h"
 #include "shared.h"
@@ -51,6 +52,7 @@ void handleFeed(unsigned int userId, DomainHandle *remoteHandle) {
       }
     }
   }
+  addListener(remoteHandle);
 }
 
 /**
@@ -81,6 +83,37 @@ int sendPushRequest(const unsigned int userID) {
   return SUCCESS;
 }
 
+void pushFeedMessage(unsigned int idolId, char *message, int messageLength) {
+  List *followers;
+  if (getIdolFollowers(idolId, &followers) != SUCCESS) {
+    printf("Warning... no followers for idolId=$d", idolId);
+    return;
+  }
+  List *listeners;
+  getAllListeners(&listeners);
+  LodiServerMessage responseMessage = {
+    .messageType = ackFeed,
+    .recipientID = idolId
+  };
+  memcpy(responseMessage.message, message, messageLength * sizeof(char));
+  for (int i = 0; i < followers->length; i++) {
+    int *followerId = NULL;
+    followers->get(followers, i, (void **) &followerId);
+
+    for (int j = 0; j < listeners->length; j++) {
+      DomainHandle *listener;
+      listeners->get(listeners, j, (void **) &listener);
+      if (listener->userID == *followerId) {
+        responseMessage.userID = *followerId;
+        const int sendStatus = lodiServer->send(lodiServer, (UserMessage *) &responseMessage, listener);
+        if (sendStatus != DOMAIN_SUCCESS) {
+          printf("Warning... wasn't able to send message to followerId=%d\n", *followerId);
+        }
+      }
+    }
+  }
+}
+
 /**
  * Lodi Server infinite loop
  */
@@ -98,6 +131,7 @@ int main() {
   initTFAClientDomain(&tfaClient, false);
   initMessageRepository();
   initFollowerRepository();
+  initListenerRepository();
   tfaClient->base.start(&tfaClient->base);
   tfaServerAddress = getServerAddr(TFA);
 
@@ -112,6 +146,7 @@ int main() {
     }
     if (receivedSuccess == TERMINATED) {
       printf("Connection terminated for userId=%d, socket %d\n", remoteHandle.userID, remoteHandle.clientSock);
+      removeListener(&remoteHandle);
       continue;
     }
     printf("Req E. 1. Received login message from Lodi client\n");
@@ -153,6 +188,7 @@ int main() {
       for (int i = 0; i < messageCount; i++) {
         printf("Message %d: %s\n", i, messages[i]);
       }
+      pushFeedMessage(receivedMessage.userID, receivedMessage.message, 100);
       responseMessageType = ackPost;
     } else if (receivedMessage.messageType == follow) {
       addFollower(receivedMessage.recipientID, receivedMessage.userID);

@@ -54,8 +54,9 @@ static int remove(List *list, int idx, void **element) {
     for (int i = 0; i < idx; i++)
         n = n->next;
 
-    if (element)
-        *element = n->element;   // Caller reclaims ownership
+    if (element) {
+        *element = n->element; // Caller reclaims ownership
+    }
     // else: caller doesn't want it; we do NOT free it
 
     n->prev->next = n->next;

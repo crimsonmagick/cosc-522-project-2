@@ -50,6 +50,8 @@ add_executable(lodi_server
     ${COMMON_SRC}
     src/lodi-server/follower_repository.h
     src/lodi-server/follower_repository.c
+    src/lodi-server/listener_repository.h
+    src/lodi-server/listener_repository.c
 )
 add_executable(pke_server
     src/pke-server/pke_server.c
