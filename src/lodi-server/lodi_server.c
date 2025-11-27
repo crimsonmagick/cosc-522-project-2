@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "follower_repository.h"
 #include "message_repository.h"
@@ -155,11 +156,39 @@ int main() {
         followers->get(followers, i, (void **) &userId);
         printf("userId=%u\n", *userId);
       }
+    } else if (receivedMessage.messageType == feed) {
+      List *idols;
+      int getFollowerRV = getFollowerIdols(receivedMessage.userID, &idols);
+      if (getFollowerRV == NOT_FOUND) {
+        continue;
+      }
+      if (getFollowerRV == SUCCESS) {
+        LodiServerMessage responseMessage = {
+          .messageType = ackFeed,
+          .userID = receivedMessage.userID
+        };
+        for (int i = 0; i < idols->length; i++) {
+          int *idolId;
+          idols->get(idols, i, (void **) &idolId);
+          responseMessage.recipientID = *idolId;
+          int messageCount = 0;
+          char **outMessages;
+          getMessages(*idolId, &outMessages, &messageCount);
+          for (int j = 0; j < messageCount; j++) {
+            memcpy(responseMessage.message, outMessages[j], 100 * sizeof(char));
+            const int sendSuccess = lodiServer->send(lodiServer, (UserMessage *) &responseMessage, &remoteHandle);
+            if (sendSuccess == ERROR) {
+              printf("Error while responding to initial feed request. Continuing...\n");
+            }
+          }
+        }
+      }
     }
 
     LodiServerMessage responseMessage = {
       .messageType = responseMessageType,
       .userID = receivedMessage.userID,
+      .recipientID = 0,
       .message = "Hello from Lodi Server!"
     };
 

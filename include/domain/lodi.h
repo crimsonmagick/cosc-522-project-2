@@ -11,7 +11,7 @@
 #define LODI_MESSAGE_LENGTH 100
 
 #define LODI_CLIENT_REQUEST_SIZE ((3 * sizeof(uint32_t) + 2 * sizeof(uint64_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
-#define LODI_SERVER_RESPONSE_SIZE ((2 * sizeof(uint32_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
+#define LODI_SERVER_RESPONSE_SIZE ((3 * sizeof(uint32_t)) + LODI_MESSAGE_LENGTH * sizeof(char))
 
 enum LodiClientMessageType {
   login, post, feed, follow, unfollow, logout
@@ -24,12 +24,12 @@ enum LodiServerMessageType {
 typedef struct {
   enum LodiServerMessageType messageType; /* same size as an unsigned int */
   unsigned int userID; /* user identifier */
+  unsigned int recipientID;
   char message[100]; /* text message*/
 } LodiServerMessage;
 
 typedef struct {
   enum LodiClientMessageType messageType;
-
   unsigned int userID; /* user identifier */
   unsigned int recipientID; /* message recipient identifier */
   unsigned long timestamp; /* timestamp */
