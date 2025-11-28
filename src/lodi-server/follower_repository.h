@@ -4,11 +4,11 @@
 
 void initFollowerRepository();
 
-int addFollower(unsigned int idolId, unsigned int followerId);
-
-int removeFollower(unsigned int idolId, unsigned int followerId);
-
 int getIdolFollowers(const unsigned int idolId, List **followers);
 
 int getFollowerIdols(const unsigned int followerId, List **idols);
+
+int addFollower(unsigned int idolId, unsigned int followerId);
+
+int removeFollower(unsigned int idolId, unsigned int followerId);
 #endif

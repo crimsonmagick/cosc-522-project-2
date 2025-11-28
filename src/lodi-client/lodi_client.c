@@ -372,7 +372,6 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
             lodiFollow(userID, timestamp, digitalSignature);
         } else if (selected == 3) {
             lodiUnfollow(userID, timestamp, digitalSignature);
-            break;
         } else if (selected == 4) {
             // TODO send logout message
             stopStreamFeed(pid);
