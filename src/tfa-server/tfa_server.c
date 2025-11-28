@@ -15,12 +15,9 @@
 #include "domain/tfa.h"
 #include "../../include/domain/pke.h"
 #include "util/rsa.h"
-#include "util/server_configs.h"
 
 static DomainClient *pkeClient = NULL;
 static DomainServer *tfaServer = NULL;
-static struct sockaddr_in pkServerAddr;
-
 
 /**
  * Giant main function for TFA Server. TODO break into smaller functions
@@ -33,7 +30,6 @@ int main() {
     pkeClient->base.start(&pkeClient->base);
     initTFAServerDomain(&tfaServer);
     tfaServer->base.start(&tfaServer->base);
-    pkServerAddr = getServerAddr(PK);
     // initialize repository
     initMessageRepository();
 
