@@ -115,17 +115,17 @@ static int datagramClientReceive(DomainClient *self, UserMessage *toReceive) {
 }
 
 static int datagramServerSend(DomainServer *self, UserMessage *toSend,
-                              DomainHandle *remoteTarget) {
-  return toDatagramDomainHost((DomainService *) self, toSend, &remoteTarget->host);
+                              ClientHandle *remoteTarget) {
+  return toDatagramDomainHost((DomainService *) self, toSend, &remoteTarget->clientAddr);
 }
 
 static int datagramServerReceive(DomainServer *self, UserMessage *toReceive,
-                                 DomainHandle *remote) {
+                                 ClientHandle *remote) {
   struct sockaddr_in receiveAddr;
   const int resp = fromDatagramDomainHost((DomainService *) self, toReceive, &receiveAddr);
   if (resp == DOMAIN_SUCCESS) {
     remote->userID = toReceive->userID;
-    remote->host = receiveAddr;
+    remote->clientAddr = receiveAddr;
   }
   return resp;
 }

@@ -1,7 +1,7 @@
 #include "domain_shared.h"
 
 static int streamServerSend(DomainServer *self, UserMessage *toSend,
-                            DomainHandle *remoteTarget) {
+                            ClientHandle *remoteTarget) {
   return toStreamDomainHost((DomainService *) self, toSend, remoteTarget->clientSock);
 }
 
@@ -36,7 +36,7 @@ static int setUpDescriptors(DomainServer *self, fd_set *allSocks) {
   int maxFd = self->base.sock;
   List *clients = self->clients;
   for (int i = 0; i < clients->length; i++) {
-    DomainHandle *client;
+    ClientHandle *client;
     clients->get(clients, i, (void **) &client);
     if (client->clientSock > maxFd) {
       maxFd = client->clientSock;
@@ -50,8 +50,8 @@ static bool isTimeoutEnabled(struct timeval * timeout) {
   return timeout != NULL && (timeout->tv_sec > 0 || timeout->tv_usec > 0);
 }
 
-static int streamServerReceive(DomainServer *self, UserMessage *toReceive,
-                               DomainHandle *remote) {
+static int streamServerReceive(DomainServer *self, UserMessage *toReceiveOut,
+                               ClientHandle *clientHandleOut) {
   while (true) {
     fd_set allSocks;
     const int maxFd = setUpDescriptors(self, &allSocks);
@@ -72,26 +72,28 @@ static int streamServerReceive(DomainServer *self, UserMessage *toReceive,
         printf("Stream Server: accept failed\n");
         return DOMAIN_FAILURE;
       }
-      DomainHandle *client = malloc(sizeof(DomainHandle));
+      ClientHandle *client = malloc(sizeof(ClientHandle));
       client->userID = NO_USER;
       client->clientSock = clientSock;
+      client->clientAddr = clientAddr;
       self->clients->append(self->clients, client);
     } else {
       for (int i = 0; i < self->clients->length; i++) {
-        DomainHandle *client;
-        self->clients->get(self->clients, i, (void **) &client);
-        if (FD_ISSET(client->clientSock, &allSocks)) {
-          const int resp = streamServerFromHost(self, toReceive, client->clientSock);
+        ClientHandle *clientHandle;
+        self->clients->get(self->clients, i, (void **) &clientHandle);
+        if (FD_ISSET(clientHandle->clientSock, &allSocks)) {
+          const int resp = streamServerFromHost(self, toReceiveOut, clientHandle->clientSock);
           if (resp == DOMAIN_SUCCESS) {
-            client->userID = toReceive->userID;
-            remote->userID = client->userID;
-            remote->clientSock = client->clientSock;
+            clientHandle->userID = toReceiveOut->userID;
+            clientHandleOut->userID = clientHandle->userID;
+            clientHandleOut->clientSock = clientHandle->clientSock;
+            clientHandleOut->clientAddr = clientHandle->clientAddr;
           } else if (resp == TERMINATED) {
-            if (self->clients->remove(self->clients, i, (void **) &remote) == ERROR) {
+            if (self->clients->remove(self->clients, i, (void **) &clientHandleOut) == ERROR) {
               printf("Stream Server: remove failed\n");
             }
-            close(remote->clientSock);
-            free(remote);
+            close(clientHandleOut->clientSock);
+            free(clientHandleOut);
           }
           return resp;
         }

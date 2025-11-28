@@ -73,17 +73,17 @@ typedef struct DomainClient {
   int (* receive)(struct DomainClient *, UserMessage*);
 } DomainClient;
 
-typedef struct DomainHandle {
+typedef struct ClientHandle {
   unsigned int userID;
-  struct sockaddr_in host; // abstract with userID maps?
+  struct sockaddr_in clientAddr; // abstract with userID maps?
   int clientSock;
-} DomainHandle;
+} ClientHandle;
 
 typedef struct DomainServer {
   DomainService base;
   List * clients;
-  int (* send)(struct DomainServer *self, UserMessage*, DomainHandle*);
-  int (* receive)(struct DomainServer *self, UserMessage*, DomainHandle*);
+  int (* send)(struct DomainServer *self, UserMessage*, ClientHandle*);
+  int (* receive)(struct DomainServer *self, UserMessage*, ClientHandle*);
 
 } DomainServer;
 

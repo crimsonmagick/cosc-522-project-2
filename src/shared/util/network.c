@@ -88,7 +88,7 @@ struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short
  * @return
  */
 int receiveUdpMessage(const int socket, char *message, const size_t messageSize,
-                           struct sockaddr_in *clientAddress) {
+                      struct sockaddr_in *clientAddress) {
   socklen_t clientAddrLen = sizeof(*clientAddress);
   const ssize_t numBytes = recvfrom(socket, message, messageSize, 0,
                                     (struct sockaddr *) clientAddress, &clientAddrLen);
@@ -120,7 +120,7 @@ int receiveUdpMessage(const int socket, char *message, const size_t messageSize,
  * @return
  */
 int sendUdpMessage(const int socket, const char *messageBuffer, const size_t messageSize,
-                        const struct sockaddr_in *destinationAddress) {
+                   const struct sockaddr_in *destinationAddress) {
   const ssize_t numBytes = sendto(socket, messageBuffer, messageSize, 0, (struct sockaddr *) destinationAddress,
                                   sizeof(*destinationAddress));
 
@@ -200,8 +200,12 @@ int receiveTcpMessage(const int socket, char *message, const size_t messageSize)
 
   int ret = SUCCESS;
   if (numBytes < 0) {
-    perror("Stream recv() failed");
-    ret = ERROR;
+    if (errno == EINTR) {
+      ret = TERMINATED;
+    } else {
+      perror("Stream recv() failed");
+      ret = ERROR;
+    }
   } else if (numBytes == 0) {
     ret = TERMINATED;
   }

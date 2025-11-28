@@ -17,17 +17,17 @@ void initListenerRepository() {
   createList(&listeners);
 }
 
-int addListener(DomainHandle * listener) {
-  DomainHandle * toAppend = malloc(sizeof(DomainHandle));
+int addListener(ClientHandle * listener) {
+  ClientHandle * toAppend = malloc(sizeof(ClientHandle));
   toAppend->userID = listener->userID;
   toAppend->clientSock = listener->clientSock;
   listeners->append(listeners, toAppend);
   return SUCCESS;
 }
 
-int removeListener(DomainHandle *listener) {
+int removeListener(ClientHandle *listener) {
   for (int i = 0; i < listeners->length; i++) {
-    DomainHandle *removalCandidate = NULL;
+    ClientHandle *removalCandidate = NULL;
     listeners->get(listeners, i, (void **) &removalCandidate);
     if (removalCandidate == NULL) {
       printf("Unexpected error while retrieving listeners...\n");

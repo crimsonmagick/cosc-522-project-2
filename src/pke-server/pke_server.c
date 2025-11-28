@@ -24,7 +24,7 @@ int main() {
   initMessageRepository();
 
   while (true) {
-    DomainHandle receiveHandle;
+    ClientHandle receiveHandle;
     PKServerToLodiClient receivedMessage;
 
     if (pkeServer->receive(pkeServer, (UserMessage *) &receivedMessage, &receiveHandle) == ERROR) {

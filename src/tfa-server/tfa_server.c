@@ -39,7 +39,7 @@ int main() {
 
     while (true) {
 
-        DomainHandle receiveHandle;
+        ClientHandle receiveHandle;
         TFAClientOrLodiServerToTFAServer receivedMessage;
         if (tfaServer->receive(tfaServer, (UserMessage *) &receivedMessage, &receiveHandle) == DOMAIN_FAILURE) {
             printf("Failed to handle incoming message, continuing...\n");
@@ -92,7 +92,7 @@ int main() {
             printf("Req C 1. a. 2) c. Received expected ack register message! Finishing registration.\n");
 
             // REGISTER CLIENT
-            addIP(receivedMessage.userID, receiveHandle.host.sin_addr, ntohs(receiveHandle.host.sin_port));
+            addIP(receivedMessage.userID, receiveHandle.clientAddr.sin_addr, ntohs(receiveHandle.clientAddr.sin_port));
             printf("Registered client! Sending final TFA confirmation message! (not in reqs)\n");
             sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &registrationSuccessMessage, &receiveHandle);
             if (sendSuccess == ERROR) {
@@ -118,9 +118,9 @@ int main() {
             tfaClientAddr.sin_addr = registeredAddress;
             tfaClientAddr.sin_port = htons(port);
 
-            DomainHandle tfaClientHandle = {
+            ClientHandle tfaClientHandle = {
                 .userID = receivedMessage.userID,
-                .host = tfaClientAddr
+                .clientAddr = tfaClientAddr
             };
 
             int sendSuccess = tfaServer->send(tfaServer, (UserMessage *) &pushRequest, &tfaClientHandle);

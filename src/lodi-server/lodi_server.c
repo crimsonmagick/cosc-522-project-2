@@ -28,7 +28,8 @@ static DomainServer *lodiServer = NULL;
 static DomainClient *tfaClient = NULL;
 static struct sockaddr_in tfaServerAddress;
 
-void handleFeed(unsigned int userId, DomainHandle *remoteHandle) {
+void handleFeed(unsigned int userId, ClientHandle *remoteHandle) {
+  addListener(remoteHandle);
   List *idols;
   if (getFollowerIdols(userId, &idols) != SUCCESS) {
     return;
@@ -52,7 +53,6 @@ void handleFeed(unsigned int userId, DomainHandle *remoteHandle) {
       }
     }
   }
-  addListener(remoteHandle);
 }
 
 /**
@@ -101,7 +101,7 @@ void pushFeedMessage(unsigned int idolId, char *message, int messageLength) {
     followers->get(followers, i, (void **) &followerId);
 
     for (int j = 0; j < listeners->length; j++) {
-      DomainHandle *listener;
+      ClientHandle *listener;
       listeners->get(listeners, j, (void **) &listener);
       if (listener->userID == *followerId) {
         responseMessage.userID = *followerId;
@@ -137,7 +137,7 @@ int main() {
 
   while (true) {
     PClientToLodiServer receivedMessage;
-    DomainHandle remoteHandle;
+    ClientHandle remoteHandle;
     const int receivedSuccess = lodiServer->receive(lodiServer, (UserMessage *) &receivedMessage, &remoteHandle);
 
     if (receivedSuccess == DOMAIN_FAILURE) {

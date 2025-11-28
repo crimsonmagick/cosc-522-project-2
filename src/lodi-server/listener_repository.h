@@ -4,8 +4,8 @@
 #include "domain/domain.h"
 
 void initListenerRepository();
-int addListener(DomainHandle *listener);
-int removeListener(DomainHandle *listener);
+int addListener(ClientHandle *listener);
+int removeListener(ClientHandle *listener);
 int getAllListeners(List **listenersOut);
 
 #endif
