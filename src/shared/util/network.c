@@ -139,8 +139,7 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
 
 int tcpConnect(const int sock, const struct sockaddr_in *serverAddress) {
   if (connect(sock, (struct sockaddr *) serverAddress, sizeof(struct sockaddr_in)) < 0) {
-    printf("Value of errno: %d\n", errno);
-    perror("Oh no");
+    printf("Unable to connect to host\n");
     return ERROR;
   }
   return SUCCESS;

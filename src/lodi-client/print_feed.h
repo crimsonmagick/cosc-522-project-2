@@ -1,6 +1,8 @@
 #ifndef COSC522_LODI_PRINT_FEED_H
 #define COSC522_LODI_PRINT_FEED_H
 
-int handle_feed(unsigned int userId, unsigned long timestamp, unsigned digitalSig);
+int startStreamFeed(unsigned int userId, unsigned int timestamp, unsigned int digitalsig);
+
+void stopStreamFeed(int pid);
 
 #endif

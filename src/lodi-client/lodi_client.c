@@ -7,21 +7,20 @@
  *    See lodiLogin() for the implementation of this functionality.
  **/
 
+#include <arpa/inet.h>
 #include <signal.h>
 #include <stdio.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <sys/prctl.h>
 #include <time.h>
 #include <unistd.h>
-#include <bits/signum-generic.h>
-#include <sys/wait.h>
 
-#include "print_feed.h"
 #include "domain/pke.h"
-#include "../../include/domain/lodi.h"
+#include "domain/lodi.h"
+#include "print_feed.h"
 #include "shared.h"
 #include "util/rsa.h"
-#include "util/server_configs.h"
 
 #define REGISTER_OPTION 1
 #define LOGIN_OPTION 2
@@ -29,8 +28,6 @@
 
 static DomainClient *pkeClient = NULL;
 static DomainClient *lodiClient = NULL;
-static struct sockaddr_in pkServerAddr;
-static struct sockaddr_in lodiServerAddr;
 
 int getMainOption();
 
@@ -40,21 +37,6 @@ int registerPublicKey(unsigned int userID, unsigned int publicKey);
 
 int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
 
-
-int startStreamFeed(unsigned int userId, unsigned int timestamp, unsigned int digitalsig) {
-    int pid = fork();
-    if (pid == 0) {
-        handle_feed(userId, timestamp, digitalsig);
-    }
-    return pid;
-}
-
-void stopStreamFeed(int pid) {
-    printf("Killing stream child with pid=%d...\n", pid);
-    kill(pid, SIGTERM);
-    waitpid(pid, NULL, 0);
-    printf("Killed child!\n");
-}
 
 /**
  * Main loop for Lodi Client
@@ -69,8 +51,6 @@ int main() {
     }
     initPKEClientDomain(&pkeClient);
     pkeClient->base.start(&pkeClient->base);
-    pkServerAddr = getServerAddr(PK);
-    lodiServerAddr = getServerAddr(LODI);
 
     printf("Welcome to the Lodi Client!\n");
     unsigned int userID = getLongInput("user ID");
@@ -79,6 +59,7 @@ int main() {
     int selected = 0;
     while (selected != QUIT_OPTION) {
         selected = getMainOption();
+        fflush(stdout);
 
         unsigned long publicKey;
         unsigned long privateKey;
@@ -362,7 +343,7 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
         printf("Unable to stream feed, exiting from login...\n");
         return ERROR;
     }
-    while (status == SUCCESS && true) {
+    while (true) {
         printf("Please select from our many amazing Lodi options:\n");
         selected = getLodiLoopOption();
         if (selected == 1) {
@@ -375,10 +356,12 @@ int lodiLogin(const unsigned int userID, const long timestamp, const long digita
         } else if (selected == 4) {
             // TODO send logout message
             stopStreamFeed(pid);
+            printf("Logged out\n");
             break;
         } else {
             printf("Please enter a valid option\n");
         }
+        fflush(stdout);
     }
     return SUCCESS;
 }
