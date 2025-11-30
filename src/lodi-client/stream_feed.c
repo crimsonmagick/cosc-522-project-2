@@ -59,7 +59,6 @@ static int handleClientFeed(unsigned int userId, unsigned long timestamp,
     .digitalSig = digitalSig
   };
 
-
   while (isRunning) {
     int clientRet;
     if (!client->isConnected) {
@@ -79,20 +78,25 @@ static int handleClientFeed(unsigned int userId, unsigned long timestamp,
       printf("Failed to receive feed message...\n");
     } else if (clientRet == DOMAIN_SUCCESS) {
       printf("Received feed message: idolId=%u, message=%s", response.recipientID, response.message);
+      if (response.messageType == failure) {
+        printf("Unrecoverable failure response from server. Please logout.\n");
+        isRunning = 0;
+      }
     } else if (clientRet == TERMINATED) {
       client->base.stop(&client->base);
       if (isRunning) {
-        printf("Connection has been unexpectedly terminated, will attempt to reconnect in %d seconds.\n", CONNECT_BACKOFF);
+        printf("Connection has been unexpectedly terminated, will attempt to reconnect in %d seconds.\n",
+               CONNECT_BACKOFF);
         sleep(CONNECT_BACKOFF);
       }
     } else {
       printf("Impossible state... Exiting...\n");
-      return ERROR;
+      isRunning = 0;
     }
   }
 
   client->base.destroy((DomainService **) &client);
-  printf("Closed gracefully...\n");
+  printf("Stopped message streaming gracefully...\n");
   return SUCCESS;
 }
 

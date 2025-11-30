@@ -82,7 +82,7 @@ static int map_remove(IntMap *map, const unsigned int key, void **out) {
             return list->remove(list, i, NULL);
         }
     }
-    return ERROR;
+    return NOT_FOUND;
 }
 
 static void map_destroy(IntMap **map) {

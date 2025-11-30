@@ -29,6 +29,8 @@ add_executable(lodi_server
     src/lodi-server/follower_repository.c
     src/lodi-server/listener_repository.h
     src/lodi-server/listener_repository.c
+    src/lodi-server/login_repository.c
+    src/lodi-server/login_repository.h
 )
 add_executable(pke_server
     src/pke-server/pke_server.c

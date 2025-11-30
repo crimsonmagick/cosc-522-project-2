@@ -19,6 +19,7 @@
 
 #include "follower_repository.h"
 #include "listener_repository.h"
+#include "login_repository.h"
 #include "message_repository.h"
 
 static int authenticate(PClientToLodiServer *request);
@@ -74,7 +75,7 @@ int main() {
 
     if (request.messageType == login) {
       handleLogin(&request, &remoteHandle);
-    } else if (authenticate(&request) == ERROR) {
+    } else if (authenticate(&request) == ERROR || !isUserLoggedIn(&remoteHandle)) {
       printf("Authentication failed for userId=%d", request.userID);
       handleFailure(&request, &remoteHandle);
     } else if (request.messageType == post) {
@@ -126,7 +127,13 @@ static void handleLogin(PClientToLodiServer *request, ClientHandle *clientHandle
   } else {
     printf("Validated TFA successfully!\n");
   }
-  // TODO login
+
+  if (isUserLoggedIn(clientHandle)) {
+    printf("User is already logged in, invalidating previous session.\n");
+    userLogout(clientHandle);
+  }
+
+  userLogin(clientHandle);
 
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
     printf("Warning: Error while sending Lodi login response.\n");

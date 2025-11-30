@@ -16,7 +16,7 @@
 #include "util/input.h"
 #include "util/rsa.h"
 
-#import "lodi_client_domain_manager.h"
+#include "lodi_client_domain_manager.h"
 #include "stream_feed.h"
 
 #define REGISTER_OPTION 1
@@ -120,8 +120,10 @@ int lodiPost(const unsigned int userID, const unsigned long timestamp, const uns
     LodiServerMessage response;
 
     const int status = lodiClientSend(&request, &response);
-    if (status != SUCCESS) {
-        printf("[USER] Failed to send Follow message...\n");
+    if (status != DOMAIN_SUCCESS || response.messageType == failure) {
+        printf("[USER] Failed to Post message...\n");
+    } else {
+        printf("Message posted successfully!\n");
     }
     return status;
 }
@@ -139,7 +141,7 @@ int lodiFollow(const unsigned int userID, const unsigned long timestamp, const u
     LodiServerMessage response;
 
     int status = lodiClientSend(&request, &response);
-    if (status != SUCCESS) {
+    if (status != SUCCESS || response.messageType == failure) {
         printf("[USER] Failed to send Follow message...\n");
     }
     return status;
@@ -158,7 +160,7 @@ int lodiUnfollow(const unsigned int userID, const unsigned long timestamp, const
     LodiServerMessage response;
 
     const int status = lodiClientSend(&request, &response);
-    if (status != SUCCESS) {
+    if (status != SUCCESS || response.messageType == failure) {
         printf("[USER] Failed to send Unfollow message...\n");
     }
     return status;
@@ -184,21 +186,21 @@ int lodiLogin(const unsigned int userID, const unsigned long timestamp, const un
     LodiServerMessage response;
 
     const int status = lodiClientSend(&request, &response);
-    if (status != SUCCESS) {
+    if (status != DOMAIN_SUCCESS || response.messageType == failure) {
         printf("[USER] Error: Login failed. Received: messageType=%u, userID=%u\n",
                response.messageType, response.userID);
+        return status;
     }
     printf("[USER] Login successful! Received: messageType=%u, userID=%u\n",
            response.messageType, response.userID);
 
     int selected = 0;
-    int pid;
-    if (status == SUCCESS) {
-        pid = startStreamFeed(userID, timestamp, digitalSignature);
-    } else {
-        printf("[USER] Unable to stream feed, exiting from login...\n");
+    const int pid = startStreamFeed(userID, timestamp, digitalSignature);
+    if (pid < 0) {
+        printf("[USER] Failed to stream idol messages...\n");
         return ERROR;
     }
+
     while (true) {
         printf("Please select from our many amazing Lodi options:\n");
         printf("1. Post a message\n");
@@ -209,7 +211,6 @@ int lodiLogin(const unsigned int userID, const unsigned long timestamp, const un
         switch (selected) {
             case LODI_POST:
                 lodiPost(userID, timestamp, digitalSignature);
-                printf("Message posted successfully!\n");
                 break;
             case LODI_FOLLOW:
                 lodiFollow(userID, timestamp, digitalSignature);
