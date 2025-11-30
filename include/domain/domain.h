@@ -7,7 +7,6 @@
 #define MESSAGE_DESERIALIZER_SUCCESS 0
 #define MESSAGE_DESERIALIZER_FAILURE 1
 #define DOMAIN_FAILURE 1
-#define DOMAIN_INIT_FAILURE 2
 
 #define DEFAULT_TIMEOUT_MS 0
 #include <stdbool.h>
@@ -47,7 +46,7 @@ typedef struct DomainServiceOpts {
 typedef struct DomainClientOpts {
   DomainServiceOpts baseOpts;
   int remotePort;
-  char * remoteHost;
+  char *remoteHost;
 } DomainClientOpts;
 
 typedef struct DomainService {
@@ -59,18 +58,23 @@ typedef struct DomainService {
   MessageSerializer outgoingSerializer;
   MessageDeserializer incomingDeserializer;
 
-  int (* start)(struct DomainService *);
-  int (* stop)(struct DomainService *);
-  int (* destroy)(struct DomainService **);
-  int (* changeTimeout)(struct DomainService *, int timeoutMs);
+  int (*start)(struct DomainService *);
+
+  int (*stop)(struct DomainService *);
+
+  int (*destroy)(struct DomainService **);
+
+  int (*changeTimeout)(struct DomainService *, int timeoutMs);
 } DomainService;
 
 typedef struct DomainClient {
   DomainService base;
   struct sockaddr_in remoteAddr;
   bool isConnected;
-  int (* send)(struct DomainClient *, UserMessage*);
-  int (* receive)(struct DomainClient *, UserMessage*);
+
+  int (*send)(struct DomainClient *, UserMessage *);
+
+  int (*receive)(struct DomainClient *, UserMessage *);
 } DomainClient;
 
 typedef struct ClientHandle {
@@ -81,14 +85,16 @@ typedef struct ClientHandle {
 
 typedef struct DomainServer {
   DomainService base;
-  List * clients;
-  int (* send)(struct DomainServer *self, UserMessage*, ClientHandle*);
-  int (* receive)(struct DomainServer *self, UserMessage*, ClientHandle*);
+  List *clients;
 
+  int (*send)(struct DomainServer *self, UserMessage *, ClientHandle *);
+
+  int (*receive)(struct DomainServer *self, UserMessage *, ClientHandle *);
 } DomainServer;
 
-int createClient(DomainClientOpts options, DomainClient** client);
-int createServer(DomainServiceOpts options, DomainServer** server);
+int createClient(DomainClientOpts options, DomainClient **client);
+
+int createServer(DomainServiceOpts options, DomainServer **server);
 
 
 #endif

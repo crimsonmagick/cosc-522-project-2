@@ -3,14 +3,9 @@
  * big-endian.
  */
 
-#include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 
-#include "domain/domain.h"
-#include "../../../include/domain/tfa.h"
+#include "domain/tfa.h"
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
@@ -59,11 +54,11 @@ int deserializeServerTFA(char *serialized, TFAServerToLodiServer *deserialized) 
  * Boilerplate DomainService constructor functions
  */
 
-int initTFAClientDomain(DomainClient **client, const bool bindToPort) {
+int initTFAClientDomain(DomainClient **client) {
   ServerConfig serverConfig = getServerConfig(TFA);
   const MessageSerializer outgoing = {
     TFA_CLIENT_REQUEST_SIZE,
-    .serializer = (int (*)(void *, char *))serializeClientTFA
+    .serializer = (int (*)(void *, char *)) serializeClientTFA
   };
   const MessageDeserializer incoming = {
     TFA_SERVER_RESPONSE_SIZE,
@@ -80,10 +75,6 @@ int initTFAClientDomain(DomainClient **client, const bool bindToPort) {
     .remotePort = atoi(serverConfig.port),
     .remoteHost = serverConfig.address
   };
-  // if (bindToPort) {
-  //   const ServerConfig server_config = getServerConfig(TFA_CLIENT);
-  //   options.baseOpts.localPort = atoi(server_config.port);
-  // }
 
   if (createClient(options, client) != DOMAIN_SUCCESS) {
     return ERROR;

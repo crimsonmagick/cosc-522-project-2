@@ -3,11 +3,8 @@
  **/
 
 #include <string.h>
-
 #include "registration_repository.h"
-
 #include <stdlib.h>
-
 #include "shared.h"
 
 #define SIZE 500

@@ -8,11 +8,8 @@
  **/
 
 #include <stdio.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdbool.h>
 
-#include "../../include/domain/pke.h"
+#include "domain/pke.h"
 #include "key_repository.h"
 #include "shared.h"
 

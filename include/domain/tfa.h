@@ -8,7 +8,6 @@
 
 #define TFA_CLIENT_REQUEST_SIZE (2 * sizeof(uint32_t) + 2 * sizeof(uint64_t))
 #define TFA_SERVER_RESPONSE_SIZE (2 * sizeof(uint32_t))
-#include <stdbool.h>
 #include "domain/domain.h"
 
 typedef struct {
@@ -28,7 +27,7 @@ typedef struct {
   unsigned int userID; /* user's identifier or requested user identifier*/
 } TFAServerToLodiServer;
 
-int initTFAClientDomain(DomainClient **client, const bool bindToPort);
+int initTFAClientDomain(DomainClient **client);
 
 int initTFAServerDomain(DomainServer **server);
 

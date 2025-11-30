@@ -38,8 +38,10 @@ add_executable(echo_server_tcp
 add_executable(lodi_client
     src/lodi-client/lodi_client.c
     ${COMMON_SRC}
-    src/lodi-client/print_feed.c
-    src/lodi-client/print_feed.h
+    src/lodi-client/stream_feed.c
+    src/lodi-client/stream_feed.h
+    src/lodi-client/lodi_client_domain_manager.c
+    src/lodi-client/lodi_client_domain_manager.h
 )
 target_link_libraries(lodi_client PRIVATE m)
 

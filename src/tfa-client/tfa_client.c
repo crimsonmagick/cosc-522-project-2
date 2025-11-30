@@ -5,27 +5,21 @@
  * 2  Responds to push authentication requests sent from the Lodi Server
  **/
 
-#include <stdio.h>      /* for printf() and fprintf() */
-#include <sys/socket.h> /* for socket(), connect(), sendto(), and recvfrom() */
-#include <stdlib.h>     /* for atoi() and exit() */
-#include <string.h>     /* for memset() */
-#include <unistd.h>     /* for close() */
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
 
-#include "domain/domain.h"
-#include "../../include/domain/tfa.h"
+#include "domain/tfa.h"
 #include "shared.h"
+#include "util/input.h"
 #include "util/rsa.h"
-#include "util/server_configs.h"
 
 #define REGISTER_OPTION 1
 #define LOGIN_OPTION 2
 #define QUIT_OPTION 3
 
 int getMainOption();
-
-unsigned long getLongInput(char *inputName);
 
 int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsigned long digitalSignature);
 
@@ -34,7 +28,6 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
 void handleTFAPush();
 
 static DomainClient *tfaClient = NULL;
-static struct sockaddr_in tfaServerAddr;
 
 /**
  * Main loop for TFA Client
@@ -42,9 +35,8 @@ static struct sockaddr_in tfaServerAddr;
  * @return theoretically, 0 on success - loops forever in order to receive pushes after registration
  */
 int main() {
-    initTFAClientDomain(&tfaClient,true);
+    initTFAClientDomain(&tfaClient);
     tfaClient->base.start(&tfaClient->base);
-    tfaServerAddr = getServerAddr(TFA);
 
     printf("Welcome to the TFA Client!\n");
     unsigned int userID = getLongInput("user ID");
@@ -61,32 +53,6 @@ int main() {
     }
 
     handleTFAPush();
-}
-
-/**
- * Generic method for retrieving a long integer from keyboard input.
- * FIXME - this is duplicated from Lodi Client, needs to be extracted into a shared function
- *
- * @param inputName The name of the input you're prompting for
- * @return The long value input by the user
- */
-unsigned long getLongInput(char *inputName) {
-    long input = -1;
-    while (input < 0) {
-        printf("Please enter your %s:\n", inputName);
-        char line[64];
-
-        if (fgets(line, sizeof(line), stdin)) {
-            sscanf(line, "%ld", &input);
-            if (sscanf(line, "%d", &input) != 1 || input < 0) {
-                printf("Invalid %s entered. Please try again!\n", inputName);
-            }
-        } else {
-            printf("Failed to read user input. Please try again:\n");
-        }
-    }
-
-    return (unsigned long) input;
 }
 
 /**

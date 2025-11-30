@@ -1,4 +1,4 @@
-#include "print_feed.h"
+#include "stream_feed.h"
 
 #include <signal.h>
 #include <stdbool.h>
@@ -47,7 +47,7 @@ static int handleClientFeed(unsigned int userId, unsigned long timestamp,
                             unsigned digitalSig) {
   printf("Initializing feed...\n");
   DomainClient *client;
-  if (initLodiClientDomain(&client) == DOMAIN_FAILURE) {
+  if (initLodiClient(&client) == DOMAIN_FAILURE) {
     printf("Failed to initialize Lodi Client when requesting feed!\n");
     return ERROR;
   }

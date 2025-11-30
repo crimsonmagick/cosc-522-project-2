@@ -37,7 +37,8 @@ typedef struct {
   char message[100]; /* text message*/
 } PClientToLodiServer;
 
-int initLodiClientDomain(DomainClient **domainClient);
+int initLodiClient(DomainClient **domainClient);
 
 int initLodiServerDomain(DomainServer **server);
+
 #endif

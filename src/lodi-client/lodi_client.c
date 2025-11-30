@@ -7,36 +7,30 @@
  *    See lodiLogin() for the implementation of this functionality.
  **/
 
-#include <arpa/inet.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/prctl.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "domain/pke.h"
-#include "domain/lodi.h"
-#include "print_feed.h"
 #include "shared.h"
+#include "util/input.h"
 #include "util/rsa.h"
+
+#import "lodi_client_domain_manager.h"
+#include "stream_feed.h"
 
 #define REGISTER_OPTION 1
 #define LOGIN_OPTION 2
 #define QUIT_OPTION 3
 
-static DomainClient *pkeClient = NULL;
-static DomainClient *lodiClient = NULL;
-
-int getMainOption();
-
-unsigned long getLongInput(char *inputName);
+#define LODI_POST 1
+#define LODI_FOLLOW 2
+#define LODI_UNFOLLOW 3
+#define LODI_LOGOUT 4
 
 int registerPublicKey(unsigned int userID, unsigned int publicKey);
 
-int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
-
+int lodiLogin(unsigned int userID, unsigned long timestamp, unsigned long digitalSignature);
 
 /**
  * Main loop for Lodi Client
@@ -44,26 +38,23 @@ int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
  * @return theoretically, 0 on success - loop uses exit() to end the program instead
  */
 int main() {
-    // initialize domains
-    if (initLodiClientDomain(&lodiClient) == DOMAIN_FAILURE) {
-        printf("Failed to initialize Lodi Client Domain!\n");
-        exit(-1);
-    }
-    initPKEClientDomain(&pkeClient);
-    pkeClient->base.start(&pkeClient->base);
-
     printf("Welcome to the Lodi Client!\n");
-    unsigned int userID = getLongInput("user ID");
+    const unsigned int userID = getLongInput("user ID");
     printf("Now choose from the following options:\n");
 
     int selected = 0;
     while (selected != QUIT_OPTION) {
-        selected = getMainOption();
+        printf("1. Register your Lodi Key\n");
+        printf("2. Login to Lodi\n");
+        printf("3. Quit\n");
+
+        selected = getInt();
+
         fflush(stdout);
 
         unsigned long publicKey;
         unsigned long privateKey;
-        unsigned long timestamp;
+        time_t timestamp;
         unsigned long digitalSignature;
         switch (selected) {
             case REGISTER_OPTION:
@@ -72,7 +63,6 @@ int main() {
                 registerPublicKey(userID, publicKey);
                 break;
             case LOGIN_OPTION:
-                // TODO look into reusing generated private key
                 privateKey = getLongInput("private key");
                 time(&timestamp);
                 digitalSignature = encryptTimestamp(timestamp, privateKey, MODULUS);
@@ -92,82 +82,6 @@ int main() {
 }
 
 /**
- * Gets an option from the user for the main Lodi client loop.
- *
- * @return a selected int: 1,2, or 3
- */
-int getMainOption() {
-    printf("1. Register your Lodi Key\n");
-    printf("2. Login to Lodi\n");
-    printf("3. Quit\n");
-
-    int selected = 0;
-    char line[64];
-
-    if (fgets(line, sizeof(line), stdin)) {
-        sscanf(line, "%d", &selected);
-    }
-    return selected;
-}
-
-/**
- * Gets user selected Lodi option after login. Fulfills A. 3.
- *
- * @return the selected option
- */
-int getLodiLoopOption() {
-    printf("1. Post a message\n");
-    printf("2. Follow an idol\n");
-    printf("3. Unfollow an idol\n");
-    printf("4. Logout\n");
-
-    int selected = 0;
-    char line[64];
-
-    if (fgets(line, sizeof(line), stdin)) {
-        sscanf(line, "%d", &selected);
-    }
-    return selected;
-}
-
-void getStringInput(char *inputName, char *inputStr, const int strLength) {
-    bool inputSuccess = false;
-    while (!inputSuccess) {
-        printf("Please enter your %s:\n", inputName);
-
-        if (!fgets(inputStr, strLength, stdin)) {
-            printf("Failed to read user input. Please try again:\n");
-        } else {
-            inputSuccess = true;
-        }
-    }
-}
-
-/**
- * Generic method for retrieving a long integer from keyboard input.
- * @param inputName The name of the input you're prompting for
- * @return The long value input by the user
- */
-unsigned long getLongInput(char *inputName) {
-    long input = -1;
-    while (input < 0) {
-        printf("Please enter your %s:\n", inputName);
-        char line[64];
-
-        if (fgets(line, sizeof(line), stdin)) {
-            sscanf(line, "%ld", &input);
-            if (sscanf(line, "%d", &input) != 1 || input < 0) {
-                printf("Invalid %s entered. Please try again!\n", inputName);
-            }
-        } else {
-            printf("Failed to read user input. Please try again:\n");
-        }
-    }
-
-    return (unsigned long) input;
-}
-
-/**
  * Registers the publicKey against the PKE server. Fulfills requirement A. 1.
  *
  * @param userID User associated with the publicKey
@@ -180,30 +94,19 @@ int registerPublicKey(const unsigned int userID, const unsigned int publicKey) {
         userID,
         publicKey
     };
-
-
-    if (pkeClient->send(pkeClient, (UserMessage *) &requestMessage) == DOMAIN_FAILURE) {
-        printf("Unable to send registration, aborting ...\n");
-        return ERROR;
-    }
-    printf("Req A. 1. a. - sent registerKey Message to PKE Server\n");
-
     PKServerToLodiClient responseMessage;
+    const int status = lodiClientPkeSend(&requestMessage, &responseMessage);
 
-    if (pkeClient->receive(pkeClient, (UserMessage *) &responseMessage) == DOMAIN_FAILURE) {
+    if (status != SUCCESS) {
         printf("Failed to receive registration confirmation, aborting ...\n");
-        return ERROR;
+    } else {
+        printf("Message details: messageType=%u, userID=%u, publicKey=%u\n",
+               responseMessage.messageType, responseMessage.userID, responseMessage.publicKey);
     }
-    printf("Message details: messageType=%u, userID=%u, publicKey=%u\n",
-           responseMessage.messageType, responseMessage.userID, responseMessage.publicKey);
-
-    return SUCCESS;
+    return status;
 }
 
-
-int lodiPost(const unsigned int userID, const long timestamp, const long digitalSignature) {
-    lodiClient->base.start(&lodiClient->base);
-
+int lodiPost(const unsigned int userID, const unsigned long timestamp, const unsigned long digitalSignature) {
     PClientToLodiServer request = {
         .messageType = post,
         .userID = userID,
@@ -211,95 +114,54 @@ int lodiPost(const unsigned int userID, const long timestamp, const long digital
         .timestamp = timestamp,
         .digitalSig = digitalSignature
     };
-    getStringInput("your Lodi message", request.message, 100);
-
-
-    int status = SUCCESS;
-    if (lodiClient->send(lodiClient, (UserMessage *) &request) == ERROR) {
-        printf("Failed to send Post...\n");
-        status = ERROR;
-    }
+    getStringInput("your Lodi message", request.message, LODI_MESSAGE_LENGTH);
 
     LodiServerMessage response;
 
-    if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
-        printf("Failed to receive Post response...\n");
-        status = ERROR;
-    } else {
-        printf("Received ack of post: messageType=%u, userID=%u\n",
-               response.messageType, response.userID);
+    const int status = lodiClientSend(&request, &response);
+    if (status != SUCCESS) {
+        printf("[USER] Failed to send Follow message...\n");
     }
-
-    lodiClient->base.stop(&lodiClient->base);
     return status;
 }
 
-int lodiFollow(const unsigned int userID, const long timestamp, const long digitalSignature) {
-    lodiClient->base.start(&lodiClient->base);
+int lodiFollow(const unsigned int userID, const unsigned long timestamp, const unsigned long digitalSignature) {
+    const unsigned int idolId = getLongInput("idolId");
 
-    unsigned int idolId = getLongInput("idolId");
-
-    PClientToLodiServer request = {
+    const PClientToLodiServer request = {
         .messageType = follow,
         .userID = userID,
         .recipientID = idolId,
         .timestamp = timestamp,
         .digitalSig = digitalSignature
     };
-
-    int status = SUCCESS;
-    if (lodiClient->send(lodiClient, (UserMessage *) &request) == ERROR) {
-        printf("Failed to send Follow message...\n");
-        status = ERROR;
-    }
-
     LodiServerMessage response;
 
-    if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
-        printf("Failed to receive Follow response...\n");
-        status = ERROR;
-    } else {
-        printf("Received ack of follow: messageType=%u, userID=%u\n",
-               response.messageType, response.userID);
+    int status = lodiClientSend(&request, &response);
+    if (status != SUCCESS) {
+        printf("[USER] Failed to send Follow message...\n");
     }
-
-    lodiClient->base.stop(&lodiClient->base);
     return status;
 }
 
-int lodiUnfollow(const unsigned int userID, const long timestamp, const long digitalSignature) {
-    lodiClient->base.start(&lodiClient->base);
+int lodiUnfollow(const unsigned int userID, const unsigned long timestamp, const unsigned long digitalSignature) {
+    const unsigned int idolId = getLongInput("idolId");
 
-    unsigned int idolId = getLongInput("idolId");
-
-    PClientToLodiServer request = {
+    const PClientToLodiServer request = {
         .messageType = unfollow,
         .userID = userID,
         .recipientID = idolId,
         .timestamp = timestamp,
         .digitalSig = digitalSignature
     };
-
-    int status = SUCCESS;
-    if (lodiClient->send(lodiClient, (UserMessage *) &request) == ERROR) {
-        printf("Failed to send unfollow message...\n");
-        status = ERROR;
-    }
-
     LodiServerMessage response;
 
-    if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
-        printf("Failed to receive unfollow response...\n");
-        status = ERROR;
-    } else {
-        printf("Received ack of unfollow: messageType=%u, userID=%u\n",
-               response.messageType, response.userID);
+    const int status = lodiClientSend(&request, &response);
+    if (status != SUCCESS) {
+        printf("[USER] Failed to send Unfollow message...\n");
     }
-
-    lodiClient->base.stop(&lodiClient->base);
     return status;
 }
-
 
 /**
  * Authenticates user, logging into the Lodi server. Fulfills requirement A. 2.
@@ -309,59 +171,58 @@ int lodiUnfollow(const unsigned int userID, const long timestamp, const long dig
  * @param digitalSignature The encrypted timestamp
  * @return SUCCESS or FAILURE (int)
  */
-int lodiLogin(const unsigned int userID, const long timestamp, const long digitalSignature) {
+int lodiLogin(const unsigned int userID, const unsigned long timestamp, const unsigned long digitalSignature) {
     const PClientToLodiServer request = {
         .messageType = login,
         .userID = userID,
         .recipientID = 0,
         .timestamp = timestamp,
-        .digitalSig = digitalSignature,
-        .message = "Hello from Lodi Client!"
+        .digitalSig = digitalSignature
     };
 
-    int status = SUCCESS;
     LodiServerMessage response;
 
-    lodiClient->base.start(&lodiClient->base);
-    if (lodiClient->send(lodiClient, (UserMessage *) &request) == DOMAIN_FAILURE) {
-        printf("Failed to send login message, aborting...\n");
-        status = ERROR;
-    } else if (lodiClient->receive(lodiClient, (UserMessage *) &response) != SUCCESS) {
-        printf("Failed to receive login message, aborting...\n");
-        status = ERROR;
-    } else {
-        printf("Login successful! Received: messageType=%u, userID=%u\n",
+    const int status = lodiClientSend(&request, &response);
+    if (status != SUCCESS) {
+        printf("[USER] Error: Login failed. Received: messageType=%u, userID=%u\n",
                response.messageType, response.userID);
     }
-    lodiClient->base.stop(&lodiClient->base);
+    printf("[USER] Login successful! Received: messageType=%u, userID=%u\n",
+           response.messageType, response.userID);
 
     int selected = 0;
     int pid;
     if (status == SUCCESS) {
         pid = startStreamFeed(userID, timestamp, digitalSignature);
     } else {
-        printf("Unable to stream feed, exiting from login...\n");
+        printf("[USER] Unable to stream feed, exiting from login...\n");
         return ERROR;
     }
     while (true) {
         printf("Please select from our many amazing Lodi options:\n");
-        selected = getLodiLoopOption();
-        if (selected == 1) {
-            lodiPost(userID, timestamp, digitalSignature);
-            printf("Message posted successfully!\n");
-        } else if (selected == 2) {
-            lodiFollow(userID, timestamp, digitalSignature);
-        } else if (selected == 3) {
-            lodiUnfollow(userID, timestamp, digitalSignature);
-        } else if (selected == 4) {
-            // TODO send logout message
-            stopStreamFeed(pid);
-            printf("Logged out\n");
-            break;
-        } else {
-            printf("Please enter a valid option\n");
+        printf("1. Post a message\n");
+        printf("2. Follow an idol\n");
+        printf("3. Unfollow an idol\n");
+        printf("4. Logout\n");
+        selected = getInt();
+        switch (selected) {
+            case LODI_POST:
+                lodiPost(userID, timestamp, digitalSignature);
+                printf("Message posted successfully!\n");
+                break;
+            case LODI_FOLLOW:
+                lodiFollow(userID, timestamp, digitalSignature);
+                break;
+            case LODI_UNFOLLOW:
+                lodiUnfollow(userID, timestamp, digitalSignature);
+                break;
+            case LODI_LOGOUT:
+                stopStreamFeed(pid);
+                // TODO send logout message
+                printf("Logged out\n");
+                return SUCCESS;
+            default:
+                printf("Please enter a valid option\n");
         }
-        fflush(stdout);
     }
-    return SUCCESS;
 }

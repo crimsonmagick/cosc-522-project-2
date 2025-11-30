@@ -8,10 +8,7 @@
 #include "shared.h"
 #include "collections/int_map.h"
 #include "collections/list.h"
-
-#define SIZE 500
-#define MAX_MESSAGE_COUNT 100
-#define MESSAGE_SIZE 100
+#include "domain/lodi.h"
 
 IntMap *userMessages;
 
@@ -35,12 +32,12 @@ int addMessage(unsigned int userId, char *message) {
     }
   }
 
-  char *toPersist = malloc(MESSAGE_SIZE * sizeof(char));
+  char *toPersist = malloc(LODI_MESSAGE_LENGTH* sizeof(char));
   if (toPersist == NULL) {
     printf("[MessageRepository] Error while persisting user message for userId=%d; malloc() failure.", userId);
     return ERROR;
   }
-  memcpy(toPersist, message, MESSAGE_SIZE);
+  memcpy(toPersist, message, LODI_MESSAGE_LENGTH);
   if (messages->append(messages, toPersist) == ERROR) {
     printf("[MessageRepository] Error while persisting user message for userId=%d; failed to append message.", userId);
     free(toPersist);

@@ -20,6 +20,5 @@ typedef struct {
 } ServerConfig;
 
 ServerConfig getServerConfig(const enum Server server);
-struct sockaddr_in getServerAddr(const enum Server server);
 
 #endif

@@ -4,13 +4,9 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <netinet/in.h>
 
-#include "../../../include/domain/pke.h"
-
-#include "domain/domain.h"
+#include "domain/pke.h"
 #include "shared.h"
 #include "util/buffers.h"
 #include "util/server_configs.h"
@@ -19,7 +15,6 @@
  * Gets the public key for a user for the PKE Server
  *
  * @param client Domain Service to use to retrieve public key
- * @param pkeAddr Domain Service address
  * @param userID user to retrieve for
  * @param publicKey output, the retrieved public key
  * @return ERROR, SUCCESS
@@ -52,7 +47,7 @@ int getPublicKey(DomainClient *client, const unsigned int userID, unsigned int *
  * Boilerplate serdes functions
  */
 
-int serializeClientPK(PClientToPKServer *toSerialize, char *serialized) {
+static int serializeClientPK(PClientToPKServer *toSerialize, char *serialized) {
   size_t offset = 0;
   appendUint32(serialized, &offset, toSerialize->messageType);
   appendUint32(serialized, &offset, toSerialize->userID);
@@ -61,7 +56,7 @@ int serializeClientPK(PClientToPKServer *toSerialize, char *serialized) {
   return MESSAGE_SERIALIZER_SUCCESS;
 }
 
-int serializeServerPK(PKServerToLodiClient *toSerialize, char *serialized) {
+static int serializeServerPK(PKServerToLodiClient *toSerialize, char *serialized) {
   size_t offset = 0;
   appendUint32(serialized, &offset, toSerialize->messageType);
   appendUint32(serialized, &offset, toSerialize->userID);
@@ -70,7 +65,7 @@ int serializeServerPK(PKServerToLodiClient *toSerialize, char *serialized) {
   return MESSAGE_SERIALIZER_SUCCESS;
 }
 
-int deserializeClientPK(char *serialized, PKServerToLodiClient *deserialized) {
+static int deserializeClientPK(char *serialized, PKServerToLodiClient *deserialized) {
   size_t offset = 0;
   deserialized->messageType = getUint32(serialized, &offset);
   deserialized->userID = getUint32(serialized, &offset);
@@ -79,7 +74,7 @@ int deserializeClientPK(char *serialized, PKServerToLodiClient *deserialized) {
   return MESSAGE_DESERIALIZER_SUCCESS;
 }
 
-int deserializeServerPK(char *serialized, PKServerToLodiClient *deserialized) {
+static int deserializeServerPK(char *serialized, PKServerToLodiClient *deserialized) {
   size_t offset = 0;
   deserialized->messageType = getUint32(serialized, &offset);
   deserialized->userID = getUint32(serialized, &offset);
@@ -88,7 +83,7 @@ int deserializeServerPK(char *serialized, PKServerToLodiClient *deserialized) {
   return MESSAGE_DESERIALIZER_SUCCESS;
 }
 
-int initPKEClientDomain(DomainClient **client) {
+int initPkeClient(DomainClient **client) {
   const ServerConfig serverConfig = getServerConfig(PK);
   const MessageSerializer outgoing = {
     PK_CLIENT_REQUEST_SIZE,

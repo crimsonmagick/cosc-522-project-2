@@ -7,13 +7,12 @@
  **/
 
 #include <stdio.h>
-#include <arpa/inet.h>
 #include <stdbool.h>
 
-#include "shared.h"
-#include "registration_repository.h"
 #include "domain/tfa.h"
-#include "../../include/domain/pke.h"
+#include "domain/pke.h"
+#include "registration_repository.h"
+#include "shared.h"
 #include "util/rsa.h"
 
 static DomainClient *pkeClient = NULL;
@@ -26,7 +25,7 @@ static DomainServer *tfaServer = NULL;
  */
 int main() {
     // initialize domains
-    initPKEClientDomain(&pkeClient);
+    initPkeClient(&pkeClient);
     pkeClient->base.start(&pkeClient->base);
     initTFAServerDomain(&tfaServer);
     tfaServer->base.start(&tfaServer->base);
@@ -34,7 +33,6 @@ int main() {
     initMessageRepository();
 
     while (true) {
-
         ClientHandle receiveHandle;
         TFAClientOrLodiServerToTFAServer receivedMessage;
         if (tfaServer->receive(tfaServer, (UserMessage *) &receivedMessage, &receiveHandle) == DOMAIN_FAILURE) {

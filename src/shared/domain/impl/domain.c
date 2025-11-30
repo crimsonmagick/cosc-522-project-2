@@ -3,12 +3,9 @@
  *  serialization and deserialization.
  */
 
-
-#include "domain_shared.h"
 #include "domain_datagram.c"
 #include "domain_stream_client.c"
 #include "domain_stream_server.c"
-#include "util/network.h"
 
 static struct timeval createTimeout(const int timeoutMs) {
   const long timeoutS = timeoutMs / 1000;
@@ -55,7 +52,7 @@ static void initializeGenericService(DomainServiceOpts options,
 int createServer(const DomainServiceOpts options, DomainServer **server) {
   *server = calloc(1, sizeof(DomainServer));
   if (*server == NULL) {
-    return DOMAIN_INIT_FAILURE;
+    return DOMAIN_FAILURE;
   }
   if (options.connectionType == DATAGRAM) {
     (*server)->base.start = startDatagramService;

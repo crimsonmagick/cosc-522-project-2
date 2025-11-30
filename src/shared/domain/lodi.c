@@ -3,11 +3,9 @@
  * big-endian.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "domain/domain.h"
 #include "domain/lodi.h"
 #include "shared.h"
 #include "util/buffers.h"
@@ -64,7 +62,7 @@ int deserializeServerLoginLodi(char *serialized, LodiServerMessage *deserialized
  * Boilerplate DomainService constructor functions
  */
 
-int initLodiClientDomain(DomainClient **domainClient) {
+int initLodiClient(DomainClient **domainClient) {
   const MessageSerializer outgoing = {
     LODI_CLIENT_REQUEST_SIZE,
     .serializer = (int (*)(void *, char *)) serializeClientLodi

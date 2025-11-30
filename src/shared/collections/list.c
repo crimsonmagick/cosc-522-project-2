@@ -1,6 +1,6 @@
-#include "collections/list.h"
 #include <stdlib.h>
 
+#include "collections/list.h"
 #include "shared.h"
 
 typedef struct Node {

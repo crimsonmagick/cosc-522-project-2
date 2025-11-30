@@ -28,7 +28,7 @@ typedef struct {
  * Constructor functions
  */
 
-int initPKEClientDomain(DomainClient **client);
+int initPkeClient(DomainClient **client);
 
 int initPKEServerDomain(DomainServer **server);
 

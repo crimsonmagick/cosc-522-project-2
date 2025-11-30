@@ -16,14 +16,14 @@ typedef struct IntMapImpl {
     List *buckets[BUCKETS];
 } IntMapImpl;
 
-static int hash(int key) {
+static int hash(const int key) {
     return (key < 0 ? -key : key) % BUCKETS;
 }
 
 static int map_get(IntMap *map, int key, void **element) {
     if (!element) return ERROR;
 
-    IntMapImpl *impl = (IntMapImpl *)map;
+    const IntMapImpl *impl = (IntMapImpl *)map;
     List *list = impl->buckets[hash(key)];
     if (!list) {
         return NOT_FOUND;
