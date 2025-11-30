@@ -32,11 +32,11 @@ int getPublicKey(DomainClient *client, const unsigned int userID, unsigned int *
 
   PKServerToLodiClient responseMessage;
   if (client->receive(client, (UserMessage *) &responseMessage) == DOMAIN_FAILURE) {
-    printf("Failed to receive public key, aborting ...\n");
+    printf("[ERROR] Failed to receive public key, aborting ...\n");
     return ERROR;
   }
 
-  printf("Received public key successfully! Received: messageType=%u, userID=%u, publicKey=%u\n",
+  printf("[DEBUG] Received public key successfully! Received: messageType=%u, userID=%u, publicKey=%u\n",
          responseMessage.messageType, responseMessage.userID, responseMessage.publicKey);
   *publicKey = responseMessage.publicKey;
 

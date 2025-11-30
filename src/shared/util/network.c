@@ -3,19 +3,13 @@
 */
 
 #include <stdio.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 
-
 #include "shared.h"
-#include "../../../include/util/network.h"
-
-#include <stdlib.h>
-
-#define TIMEOUT_SECONDS 0
+#include "util/network.h"
 
 #define MAX_PENDING 50
 
@@ -27,31 +21,31 @@
  * @return
  */
 int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, enum ConnectionType connectionType) {
-  enum __socket_type sockType = connectionType == DATAGRAM ? SOCK_DGRAM : SOCK_STREAM;
-  int protocol = connectionType == DATAGRAM ? IPPROTO_UDP : IPPROTO_TCP;
+  const enum __socket_type sockType = connectionType == DATAGRAM ? SOCK_DGRAM : SOCK_STREAM;
+  const int protocol = connectionType == DATAGRAM ? IPPROTO_UDP : IPPROTO_TCP;
 
   const int sock = socket(AF_INET, sockType, protocol);
   if (sock < 0) {
-    perror("socket() failed");
+    perror("[ERROR] socket() failed");
     return ERROR;
   }
 
   if (connectionType == STREAM) {
-    int opt = 1;
+    const int opt = 1;
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
   }
 
   if (timeout) {
     const int optResult = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
     if (optResult < 0) {
-      perror("Unable to set socket options");
+      perror("[ERROR] Unable to set socket options");
       close(sock);
       return ERROR;
     }
   }
 
   if (address && bind(sock, (struct sockaddr *) address, sizeof(*address)) < 0) {
-    perror("bind() failed");
+    perror("[ERROR] bind() failed");
     close(sock);
     return ERROR;
   }
@@ -93,7 +87,7 @@ int receiveUdpMessage(const int socket, char *message, const size_t messageSize,
   const ssize_t numBytes = recvfrom(socket, message, messageSize, 0,
                                     (struct sockaddr *) clientAddress, &clientAddrLen);
   if (numBytes < 0) {
-    perror("recvfrom() failed");
+    perror("[ERROR] recvfrom() failed");
     return ERROR;
   }
 
@@ -101,7 +95,7 @@ int receiveUdpMessage(const int socket, char *message, const size_t messageSize,
   inet_ntop(AF_INET, &clientAddress->sin_addr, printableAddress, INET_ADDRSTRLEN);
 
   if (numBytes != (ssize_t) messageSize) {
-    printf("Received more bytes than expected: received %zd, expected %zd. Output is truncated.\n", numBytes,
+    printf("[ERROR] Received more bytes than expected: received %zd, expected %zd. Output is truncated.\n", numBytes,
            messageSize);
     return ERROR;
   }
@@ -124,12 +118,12 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
                                   sizeof(*destinationAddress));
 
   if (numBytes < 0) {
-    perror("sendTo() failed");
+    perror("[ERROR] sendTo() failed");
     return ERROR;
   }
 
   if (numBytes != (ssize_t) messageSize) {
-    printf("sendto() sent a different number of bytes than expected\n");
+    printf("[ERROR] sendto() sent a different number of bytes than expected\n");
     return ERROR;
   }
 
@@ -138,17 +132,16 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
 
 int tcpConnect(const int sock, const struct sockaddr_in *serverAddress) {
   if (connect(sock, (struct sockaddr *) serverAddress, sizeof(struct sockaddr_in)) < 0) {
-    printf("Unable to connect to host\n");
+    printf("[ERROR] Unable to connect to host\n");
     return ERROR;
   }
   return SUCCESS;
 }
 
 int tcpListen(const int sock) {
-  printf("Attempting to listen...\n");
+  printf("[DEBUG] Attempting to listen...\n");
   if (listen(sock, MAX_PENDING) < 0) {
-    printf("Failed to listen - Value of errno: %d\n", errno);
-    perror("listen failure");
+    perror("[ERROR] Failed to listen");
     return ERROR;
   }
   printf("Listen initiated!\n");
@@ -157,13 +150,12 @@ int tcpListen(const int sock) {
 
 int tcpAccept(const int sock, struct sockaddr_in *clientAddress, int *clientSock) {
   socklen_t clientLength = sizeof(struct sockaddr_in);
-  printf("Attempting to accept...\n");
-  if ((*clientSock = accept(sock, (struct sockaddr *) &clientAddress, &clientLength)) < 0) {
-    printf("Failed to accept - Value of errno: %d\n", errno);
-    perror("accept failure");
+  printf("[DEBUG] Attempting to accept...\n");
+  if ((*clientSock = accept(sock, (struct sockaddr *) clientAddress, &clientLength)) < 0) {
+    perror("[ERROR] Failed to accept");
     return ERROR;
   }
-  printf("Accepted!\n");
+  printf("[DEBUG] Accepted!\n");
   return SUCCESS;
 }
 
@@ -171,12 +163,12 @@ int sendTcpMessage(const int socket, const char *messageBuffer, const size_t mes
   const ssize_t numBytes = send(socket, messageBuffer, messageSize, 0);
 
   if (numBytes < 0) {
-    perror("Stream send() failed");
+    perror("[ERROR] Stream send() failed");
     return ERROR;
   }
 
   if (numBytes != (ssize_t) messageSize) {
-    perror("Stream send() sent a different number of bytes than expected");
+    perror("[ERROR] Stream send() sent a different number of bytes than expected");
     return ERROR;
   }
 
@@ -202,7 +194,7 @@ int receiveTcpMessage(const int socket, char *message, const size_t messageSize)
     if (errno == EINTR) {
       ret = TERMINATED;
     } else {
-      perror("Stream recv() failed");
+      perror("[ERROR] Stream recv() failed - likely a timeout");
       ret = ERROR;
     }
   } else if (numBytes == 0) {

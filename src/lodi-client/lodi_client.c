@@ -95,9 +95,9 @@ int lodiLogout(const unsigned int userID, const unsigned long timestamp, const u
 
     const int status = lodiClientSend(&request, &response);
     if (status != DOMAIN_SUCCESS || response.messageType == failure) {
-        printf("[USER] Warning - logout failed.\n");
+        printf("[MAIN DEBUG] Warning - logout failed. Were you already logged out?\n");
     } else {
-        printf("[USER] Logged out successfully.\n");
+        printf("[MAIN DEBUG] Logged out successfully.\n");
     }
     return status;
 }
@@ -141,7 +141,7 @@ int lodiPost(const unsigned int userID, const unsigned long timestamp, const uns
 
     const int status = lodiClientSend(&request, &response);
     if (status != DOMAIN_SUCCESS || response.messageType == failure) {
-        printf("[USER] Failed to Post message...\n");
+        printf("[MAIN DEBUG] Failed to Post message...\n");
     } else {
         printf("Message posted successfully!\n");
     }
@@ -162,7 +162,7 @@ int lodiFollow(const unsigned int userID, const unsigned long timestamp, const u
 
     int status = lodiClientSend(&request, &response);
     if (status != SUCCESS || response.messageType == failure) {
-        printf("[USER] Failed to send Follow message...\n");
+        printf("[MAIN DEBUG] Failed to send Follow message...\n");
     }
     return status;
 }
@@ -181,7 +181,7 @@ int lodiUnfollow(const unsigned int userID, const unsigned long timestamp, const
 
     const int status = lodiClientSend(&request, &response);
     if (status != SUCCESS || response.messageType == failure) {
-        printf("[USER] Failed to send Unfollow message...\n");
+        printf("[MAIN DEBUG] Failed to send Unfollow message...\n");
     }
     return status;
 }
@@ -207,17 +207,17 @@ int lodiLogin(const unsigned int userID, const unsigned long timestamp, const un
 
     const int status = lodiClientSend(&request, &response);
     if (status != DOMAIN_SUCCESS || response.messageType == failure) {
-        printf("[USER] Error: Login failed. Received: messageType=%u, userID=%u\n",
+        printf("[MAIN DEBUG] Error: Login failed. Received: messageType=%u, userID=%u\n",
                response.messageType, response.userID);
         return status;
     }
-    printf("[USER] Login successful! Received: messageType=%u, userID=%u\n",
+    printf("[MAIN DEBUG] Login successful! Received: messageType=%u, userID=%u\n",
            response.messageType, response.userID);
 
     int selected = 0;
     const int pid = startStreamFeed(userID, timestamp, digitalSignature);
     if (pid < 0) {
-        printf("[USER] Failed to stream idol messages...\n");
+        printf("[MAIN DEBUG] Failed to stream idol messages...\n");
         return ERROR;
     }
 

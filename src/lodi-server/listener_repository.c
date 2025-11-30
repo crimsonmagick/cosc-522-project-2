@@ -2,6 +2,9 @@
 #include <stdlib.h>
 
 #include "listener_repository.h"
+
+#include <string.h>
+
 #include "shared.h"
 
 static List *listeners = NULL;
@@ -13,10 +16,9 @@ void initListenerRepository() {
   createList(&listeners);
 }
 
-int addListener(ClientHandle * listener) {
-  ClientHandle * toAppend = malloc(sizeof(ClientHandle));
-  toAppend->userID = listener->userID;
-  toAppend->clientSock = listener->clientSock;
+int addListener(ClientHandle *listener) {
+  ClientHandle *toAppend = malloc(sizeof(ClientHandle));
+  memcpy(toAppend, listener, sizeof(ClientHandle));
   listeners->append(listeners, toAppend);
   return SUCCESS;
 }
@@ -30,7 +32,7 @@ int removeListener(ClientHandle *listener) {
       return ERROR;
     }
     if (removalCandidate->userID == listener->userID
-      && removalCandidate->clientSock == listener->clientSock) {
+        && removalCandidate->clientSock == listener->clientSock) {
       listeners->remove(listeners, i, NULL);
       free(removalCandidate);
       return SUCCESS;
@@ -40,6 +42,6 @@ int removeListener(ClientHandle *listener) {
 }
 
 int getAllListeners(List **listenersOut) {
-  *listenersOut= listeners;
+  *listenersOut = listeners;
   return SUCCESS;
 }

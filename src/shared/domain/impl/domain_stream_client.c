@@ -1,4 +1,4 @@
-#include "domain_shared.h"
+#include "domain_stream_shared.h"
 
 static int streamClientFromHost(DomainClient *client, void *message) {
   char *buf = malloc(client->base.incomingDeserializer.messageSize);

@@ -3,6 +3,8 @@
 
 #include "util/input.h"
 
+#include <string.h>
+
 void getStringInput(char *inputName, char *inputStr, const int strLength) {
   bool inputSuccess = false;
   while (!inputSuccess) {
@@ -12,6 +14,7 @@ void getStringInput(char *inputName, char *inputStr, const int strLength) {
       printf("Failed to read user input. Please try again:\n");
     } else {
       inputSuccess = true;
+      inputStr[strcspn(inputStr, "\n")] = '\0';
     }
   }
 }

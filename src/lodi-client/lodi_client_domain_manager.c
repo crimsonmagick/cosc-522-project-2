@@ -24,9 +24,6 @@ int lodiClientSend(const PClientToLodiServer *inRequest, LodiServerMessage *outR
 
   if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) outResponse) == DOMAIN_FAILURE) {
     status = ERROR;
-  } else {
-    printf("Received response from Lodi server: messageType=%u, userID=%u\n",
-           outResponse->messageType, outResponse->userID);
   }
 
   lodiClient->base.stop(&lodiClient->base);

@@ -101,15 +101,15 @@ int main() {
 static int authenticate(PClientToLodiServer *request) {
   unsigned int publicKey;
   if (getPublicKey(pkeClient, request->userID, &publicKey) == ERROR) {
-    printf("Failed to retrieve public key!\n");
+    printf("[ERROR] Failed to retrieve public key!\n");
     return ERROR;
   }
   const unsigned long decrypted = decryptTimestamp(request->digitalSig, publicKey, MODULUS);
   if (decrypted == request->timestamp) {
-    printf(" Decrypted timestamp successfully! timestamp=%lu \n", decrypted);
+    printf(" [DEBUG] Decrypted timestamp successfully! timestamp=%lu \n", decrypted);
     return SUCCESS;
   }
-  printf("Failed to decrypt timestamp! timestamp=%lu, decrypted=%lu \n",
+  printf("[ERROR] Failed to decrypt timestamp! timestamp=%lu, decrypted=%lu \n",
          request->timestamp, decrypted);
   return ERROR;
 }
@@ -126,26 +126,26 @@ static void handleLogin(PClientToLodiServer *request, ClientHandle *clientHandle
     responseMessage.messageType = failure;
   }
   if (responseMessage.messageType == ackLogin && sendPushRequest(request->userID) == ERROR) {
-    printf(" Failed to authenticate with push confirmation!\n");
+    printf("[ERROR] Failed to authenticate with push confirmation!\n");
     responseMessage.messageType = failure;
   } else {
-    printf("Validated TFA successfully!\n");
+    printf("[DEBUG] Validated TFA successfully!\n");
   }
 
   if (isUserLoggedIn(clientHandle)) {
-    printf("User is already logged in, invalidating previous session.\n");
+    printf("[WARNING] User is already logged in, invalidating previous session.\n");
     userLogout(clientHandle);
   }
 
   userLogin(clientHandle);
 
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
-    printf("Warning: Error while sending Lodi login response.\n");
+    printf("[WARMING] Error while sending Lodi login response.\n");
   }
 }
 
 static void handleLogout(PClientToLodiServer *request, ClientHandle *clientHandle) {
-  printf("[LODI_SERVER] logging out user...\n");
+  printf("[DEBUG] logging out user with userId=%u\n", request->userID);
 
   LodiServerMessage responseMessage = {
     .userID = request->userID
@@ -153,22 +153,23 @@ static void handleLogout(PClientToLodiServer *request, ClientHandle *clientHandl
   if (authenticate(request) == SUCCESS) {
     responseMessage.messageType = ackLogout;
   } else {
+    printf("[ERROR] User with userId=%u, failed authentication\n", request->userID);
     responseMessage.messageType = failure;
   }
 
   if (isUserLoggedIn(clientHandle)) {
     userLogout(clientHandle);
   } else {
-    printf("[LODI_SERVER] Warning... user was already logged out\n");
+    printf("[WARNING] User with userId=%u was already logged out\n", request->userID);
   }
 
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
-    printf("Warning: Error while sending Lodi logout response.\n");
+    printf("[WARNING] Error while sending Lodi logout response for userId=%u.\n", request->userID);
   }
 }
 
 static void handlePost(PClientToLodiServer *request, ClientHandle *clientHandle) {
-  printf("Persisting idol message, message=%s...\n", request->message);
+  printf("[DEBUG] Persisting idol message, message=%s...\n", request->message);
   LodiServerMessage responseMessage = {
     .messageType = ackPost,
     .userID = request->userID,
@@ -179,12 +180,12 @@ static void handlePost(PClientToLodiServer *request, ClientHandle *clientHandle)
     pushFeedMessage(request->userID, request->message);
   }
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
-    printf("Warning: Error while sending Lodi persistence response.\n");
+    printf("[WARNING] Error while sending Lodi persistence response.\n");
   }
 }
 
 static void handleFollow(PClientToLodiServer *request, ClientHandle *clientHandle) {
-  printf("Handling follow request.\n");
+  printf("[DEBUG] Handling follow request.\n");
   LodiServerMessage responseMessage = {
     .messageType = ackFollow,
     .userID = request->userID,
@@ -193,12 +194,12 @@ static void handleFollow(PClientToLodiServer *request, ClientHandle *clientHandl
     responseMessage.messageType = failure;
   }
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
-    printf("Warning: Error while sending Lodi follow response.\n");
+    printf("[WARNING] Error while sending Lodi follow response.\n");
   }
 }
 
 static void handleUnfollow(PClientToLodiServer *request, ClientHandle *clientHandle) {
-  printf("Handling unfollow request.\n");
+  printf("[DEBUG] Handling unfollow request.\n");
   LodiServerMessage responseMessage = {
     .messageType = ackUnfollow,
     .userID = request->userID,
@@ -207,7 +208,7 @@ static void handleUnfollow(PClientToLodiServer *request, ClientHandle *clientHan
     responseMessage.messageType = failure;
   }
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
-    printf("Warning: Error while sending Lodi unfollow response.\n");
+    printf("[WARNING] Error while sending Lodi unfollow response.\n");
   }
 }
 
@@ -217,11 +218,12 @@ static void handleFailure(PClientToLodiServer *request, ClientHandle *clientHand
     .userID = request->userID,
   };
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
-    printf("Warning: Error while sending Lodi failure.\n");
+    printf("[WARNING] Error while sending Lodi failure.\n");
   }
 }
 
 static void handleFeed(const unsigned int userId, ClientHandle *remoteHandle) {
+  printf("[DEBUG] Handling feed subscription request.\n");
   addListener(remoteHandle);
   List *idols;
   if (getFollowerIdols(userId, &idols) != SUCCESS) {
@@ -241,10 +243,10 @@ static void handleFeed(const unsigned int userId, ClientHandle *remoteHandle) {
     }
     for (int j = 0; j < messages->length; j++) {
       char *message = NULL;
-      messages->get(messages, i, (void **) &message);
+      messages->get(messages, j, (void **) &message);
       memcpy(responseMessage.message, message, LODI_MESSAGE_LENGTH * sizeof(char));
       if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, remoteHandle) == ERROR) {
-        printf("Error while responding to initial feed request. Continuing...\n");
+        printf("[WARNING] Error while responding to initial feed request. Continuing...\n");
       }
     }
   }
@@ -256,29 +258,31 @@ static void handleFeed(const unsigned int userId, ClientHandle *remoteHandle) {
  * @return ERROR or SUCCESS
  */
 static int sendPushRequest(const unsigned int userID) {
+  printf("[DEBUG] Sending push request to TFA server\n");
   const TFAClientOrLodiServerToTFAServer requestMessage = {
     .messageType = requestAuth,
     .userID = userID
   };
 
   if (tfaClient->send(tfaClient, (UserMessage *) &requestMessage) == ERROR) {
-    printf("Unable to send push notification, aborting...\n");
+    printf("[ERROR] Unable to send push notification, aborting...\n");
     return ERROR;
   }
 
   TFAServerToLodiServer response;
   if (tfaClient->receive(tfaClient, (UserMessage *) &response) == ERROR) {
-    printf("Unable to receive push notification response, aborting...\n");
+    printf("[ERROR] Unable to receive push notification response, aborting...\n");
     return ERROR;
   }
 
-  printf("Push auth confirmation received! Received: messageType=%u, userID=%u\n", response.messageType,
+  printf("[DEBUG] Push auth confirmation received! Received: messageType=%u, userID=%u\n", response.messageType,
          response.userID);
 
   return SUCCESS;
 }
 
 static void pushFeedMessage(const unsigned int idolId, char *message) {
+  printf("[DEBUG] Publishing messages to idol followers\n");
   List *followers;
   if (getIdolFollowers(idolId, &followers) != SUCCESS) {
     return;
@@ -290,6 +294,8 @@ static void pushFeedMessage(const unsigned int idolId, char *message) {
     .recipientID = idolId
   };
   memcpy(responseMessage.message, message,LODI_MESSAGE_LENGTH * sizeof(char));
+  printf("[DEBUG] Publishing messages to all logged-in listening idol followers, idolId=%u, followerCount=%d\n",
+         idolId, followers->length);
   for (int i = 0; i < followers->length; i++) {
     int *followerId = NULL;
     followers->get(followers, i, (void **) &followerId);
@@ -301,7 +307,9 @@ static void pushFeedMessage(const unsigned int idolId, char *message) {
         responseMessage.userID = *followerId;
         const int sendStatus = lodiServer->send(lodiServer, (UserMessage *) &responseMessage, listener);
         if (sendStatus != DOMAIN_SUCCESS) {
-          printf("Warning... wasn't able to send message to followerId=%d\n", *followerId);
+          printf("[WARNING] Wasn't able to send message to followerId=%d\n", *followerId);
+        } else {
+          printf("[DEBUG] Pushed messagwe to followerId=%d\n", *followerId);
         }
       }
     }

@@ -1,9 +1,9 @@
 /**
-* Interface for UDP convenience functions, simplifying interactions with the network.
+* Interface for UDP and TCP convenience functions, simplifying interactions with the network.
 */
 
-#ifndef COSC522_LODI_MESSAGING_H
-#define COSC522_LODI_MESSAGING_H
+#ifndef COSC522_LODI_NETWORK_H
+#define COSC522_LODI_NETWORK_H
 #include <arpa/inet.h>
 
 #define LOCALHOST "127.0.0.1"
@@ -14,21 +14,21 @@ enum ConnectionType {
 
 int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, enum ConnectionType connectionType);
 
-struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short serverPort);
+struct sockaddr_in getNetworkAddress(const char *ipAddress, unsigned short serverPort);
 
-int receiveUdpMessage(const int socket, char *message, const size_t messageSize, struct sockaddr_in *clientAddress);
+int receiveUdpMessage(int socket, char *message, size_t messageSize, struct sockaddr_in *clientAddress);
 
-int sendUdpMessage(const int socket, const char *messageBuffer, const size_t messageSize,
-                const struct sockaddr_in *destinationAddress);
+int sendUdpMessage(int socket, const char *messageBuffer, size_t messageSize,
+                   const struct sockaddr_in *destinationAddress);
 
-int tcpConnect(const int sock, const struct sockaddr_in *serverAddress);
+int tcpConnect(int sock, const struct sockaddr_in *serverAddress);
 
-int tcpListen(const int sock);
+int tcpListen(int sock);
 
-int tcpAccept(const int sock, struct sockaddr_in *clientAddress, int* clientSock);
+int tcpAccept(int sock, struct sockaddr_in *clientAddress, int *clientSock);
 
-int sendTcpMessage(const int socket, const char *messageBuffer, const size_t messageSize);
+int sendTcpMessage(int socket, const char *messageBuffer, size_t messageSize);
 
-int receiveTcpMessage(const int socket, char *message, const size_t messageSize);
+int receiveTcpMessage(int socket, char *message, size_t messageSize);
 
-#endif //COSC522_LODI_MESSAGING_H
+#endif

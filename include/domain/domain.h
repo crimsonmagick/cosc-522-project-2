@@ -1,17 +1,19 @@
 #ifndef COSC522_LODI_DOMAIN_H
 #define COSC522_LODI_DOMAIN_H
 
+#include <stdbool.h>
+
+#include "collections/list.h"
+
 #define DOMAIN_SUCCESS 0
 #define MESSAGE_SERIALIZER_SUCCESS 0
 #define MESSAGE_SERIALIZER_FAILURE 1
 #define MESSAGE_DESERIALIZER_SUCCESS 0
 #define MESSAGE_DESERIALIZER_FAILURE 1
+
 #define DOMAIN_FAILURE 1
 
 #define DEFAULT_TIMEOUT_MS 500
-#include <stdbool.h>
-
-#include "collections/list.h"
 
 typedef struct MessageSerializer {
   size_t messageSize;
@@ -79,7 +81,7 @@ typedef struct DomainClient {
 
 typedef struct ClientHandle {
   unsigned int userID;
-  struct sockaddr_in clientAddr; // abstract with userID maps?
+  struct sockaddr_in clientAddr;
   int clientSock;
 } ClientHandle;
 

@@ -1,4 +1,4 @@
-#include "domain_shared.h"
+#include "domain_stream_shared.h"
 
 static int streamServerSend(DomainServer *self, UserMessage *toSend,
                             ClientHandle *remoteTarget) {

@@ -1,6 +1,7 @@
 #include "collections/int_map.h"
 #include "login_repository.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,16 +22,22 @@ int userLogout(const ClientHandle *userClient) {
   if (!userStore) {
     createMap(&userStore);
   }
-  return userStore->remove(userStore, userClient->userID, NULL);
+  ClientHandle *persisted = NULL;
+  int rv = userStore->remove(userStore, userClient->userID, (void **) &persisted);
+  if (rv == SUCCESS) {
+    free(persisted);
+  } else {
+    printf("Error: unable to remove logged-in client handle, rv=%d\n", rv);
+  }
 }
 
 int isUserLoggedIn(const ClientHandle *userClient) {
   if (!userStore) {
     createMap(&userStore);
   }
-  DomainClient *persisted = NULL;
+  ClientHandle *persisted = NULL;
   if (userStore->get(userStore, userClient->userID, (void **) &persisted) == SUCCESS
-      && persisted->remoteAddr.sin_addr.s_addr == userClient->clientAddr.sin_addr.s_addr) {
+      && persisted->clientAddr.sin_addr.s_addr == userClient->clientAddr.sin_addr.s_addr) {
     return true;
   }
   return false;

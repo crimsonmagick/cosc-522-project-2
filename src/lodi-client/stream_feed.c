@@ -20,7 +20,7 @@ static int handleClientFeed(unsigned int userId, unsigned long timestamp,
 
 static void handleSigterm(int sig);
 
-int startStreamFeed(unsigned int userId, unsigned long timestamp, unsigned long digitalsig) {
+int startStreamFeed(const unsigned int userId, const unsigned long timestamp, const unsigned long digitalSignature) {
   int pid = fork();
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
@@ -30,25 +30,25 @@ int startStreamFeed(unsigned int userId, unsigned long timestamp, unsigned long 
     sa.sa_flags = 0;
     sigaction(SIGTERM, &sa, NULL);
     isRunning = 1;
-    int handleRet = handleClientFeed(userId, timestamp, digitalsig);
+    const int handleRet = handleClientFeed(userId, timestamp, digitalSignature);
     exit(handleRet);
   }
   return pid;
 }
 
-void stopStreamFeed(int pid) {
-  printf("Killing stream child with pid=%d...\n", pid);
+void stopStreamFeed(const int pid) {
+  printf("[FEED DEBUG] Killing stream child with pid=%d...\n", pid);
   kill(pid, SIGTERM);
   waitpid(pid, NULL, 0);
-  printf("Killed child!\n");
+  printf("[FEED DEBUG] Killed child!\n");
 }
 
-static int handleClientFeed(unsigned int userId, unsigned long timestamp,
-                            unsigned long digitalSig) {
-  printf("Initializing feed...\n");
+static int handleClientFeed(const unsigned int userId, const unsigned long timestamp,
+                            const unsigned long digitalSig) {
+  printf("[FEED DEBUG] Initializing feed...\n");
   DomainClient *client;
   if (initLodiClient(&client) == DOMAIN_FAILURE) {
-    printf("Failed to initialize Lodi Client when requesting feed!\n");
+    printf("[FEED ERROR] Failed to initialize Lodi Client when requesting feed!\n");
     return ERROR;
   }
 
@@ -63,45 +63,50 @@ static int handleClientFeed(unsigned int userId, unsigned long timestamp,
     int clientRet;
     if (!client->isConnected) {
       client->base.start(&client->base);
+      client->base.changeTimeout(&client->base, DEFAULT_TIMEOUT_MS);
       clientRet = client->send(client, (UserMessage *) &request);
       if (clientRet != SUCCESS) {
-        printf("Failed to send feed request... Retrying in %d seconds...\n", CONNECT_BACKOFF);
+        printf("[FEED DEBUG] Failed to send feed request... Retrying in %d seconds...\n", CONNECT_BACKOFF);
         sleep(CONNECT_BACKOFF);
         continue;
       }
+      client->base.changeTimeout(&client->base, 0);
     }
 
     LodiServerMessage response;
 
     clientRet = client->receive(client, (UserMessage *) &response);
     if (clientRet == DOMAIN_FAILURE) {
-      printf("Failed to receive feed message...\n");
+      printf("[FEED DEBUG] Failed to receive feed message...\n");
     } else if (clientRet == DOMAIN_SUCCESS) {
-      printf("Received feed message: idolId=%u, message=%s", response.recipientID, response.message);
+      printf("[FEED MESSAGE] [From Idol %u]: %s\n", response.recipientID, response.message);
       if (response.messageType == failure) {
-        printf("Unrecoverable failure response from server. Please logout.\n");
+        printf("[FEED DEBUG] Unrecoverable failure response from server. Please logout.\n");
         isRunning = 0;
       }
     } else if (clientRet == TERMINATED) {
       client->base.stop(&client->base);
       if (isRunning) {
-        printf("Connection has been unexpectedly terminated, will attempt to reconnect in %d seconds.\n",
+        printf("[FEED DEBUG] Connection has been unexpectedly terminated, will attempt to reconnect in %d seconds.\n",
                CONNECT_BACKOFF);
         sleep(CONNECT_BACKOFF);
       }
     } else {
-      printf("Impossible state... Exiting...\n");
+      printf("[FEED ERROR] Impossible state... Exiting...\n");
       isRunning = 0;
     }
   }
 
   client->base.destroy((DomainService **) &client);
-  printf("Stopped message streaming gracefully...\n");
+  printf("[FEED DEBUG] Stopped message streaming gracefully...\n");
   return SUCCESS;
 }
 
 static void handleSigterm(const int sig) {
-  (void) sig;
-  printf("[FEED-CHILD] received shutdown signal, exiting...\n");
-  isRunning = 0;
+  if (sig == SIGTERM) {
+    const char message[] = "[FEED DEBUG] received shutdown signal, exiting...\n";
+    // avoid printf inside signal handlers
+    write(STDOUT_FILENO, message, sizeof(message) - 1);
+    isRunning = 0;
+  }
 }
