@@ -1,22 +1,13 @@
 /**
  * Provides persistence for registered User public keys
  **/
+#include <stdlib.h>
 
-#include <string.h>
-
+#include "collections/int_map.h"
 #include "key_repository.h"
 #include "shared.h"
 
-#define SIZE 500
-
-unsigned int keyStore[SIZE];
-
-/**
- * Constructor function
- */
-void initKeyRepository() {
-  memset(keyStore, 0, SIZE * sizeof(unsigned int));
-}
+IntMap *keyStore = NULL;
 
 /**
  * Persists a public key
@@ -25,8 +16,12 @@ void initKeyRepository() {
  * @return ERROR, SUCCESS
  */
 int addKey(unsigned int userId, unsigned int publicKey) {
-  const unsigned int idx = userId % SIZE;
-  keyStore[idx] = publicKey;
+  if (!keyStore) {
+    createMap(&keyStore);
+  }
+  unsigned *toPersist = malloc(sizeof(unsigned int));
+  *toPersist = publicKey;
+  keyStore->add(keyStore, userId, toPersist);
   return SUCCESS;
 }
 
@@ -36,13 +31,9 @@ int addKey(unsigned int userId, unsigned int publicKey) {
  * @param publicKey  output, the public key
  * @return ERROR, SUCCESS
  */
-int getKey(unsigned int userId, unsigned int *publicKey) {
-  const unsigned int idx = userId % SIZE;
-  const unsigned int retrieved = keyStore[idx];
-  if (retrieved == 0) {
-    // key not found
-    return ERROR;
+int getKey(unsigned int userId, unsigned int **publicKey) {
+  if (!keyStore) {
+    createMap(&keyStore);
   }
-  *publicKey = retrieved;
-  return SUCCESS;
+  return keyStore->get(keyStore, userId, (void **) publicKey);
 }

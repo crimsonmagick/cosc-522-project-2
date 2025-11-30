@@ -17,10 +17,9 @@ static DomainServer *pkeServer = NULL;
 
 int main() {
   if (initPKEServerDomain(&pkeServer) == ERROR
-    || pkeServer->base.start(&pkeServer->base) == ERROR) {
+      || pkeServer->base.start(&pkeServer->base) == ERROR) {
     printf("Error, PKE server failed to start\n");
   }
-  initKeyRepository();
 
   while (true) {
     ClientHandle receiveHandle;
@@ -42,11 +41,11 @@ int main() {
       printf("Req 1. b. Added publicKey=%u for userId=%u\n", responseMessage.publicKey, responseMessage.userID);
     } else if (receivedMessage.messageType == requestKey) {
       printf("Req D. 2. a. received registerKey message \n");
-      unsigned int publicKey;
+      unsigned int *publicKey;
       if (getKey(receivedMessage.userID, &publicKey) == ERROR) {
         printf("publicKey=%u not found.\n", receivedMessage.publicKey);
       } else {
-        responseMessage.publicKey = publicKey;
+        responseMessage.publicKey = *publicKey;
       }
       responseMessage.messageType = responsePublicKey;
       printf("Req D. 2. b. responding to requestKey message with responsePublicKey\n");
