@@ -118,7 +118,9 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
                                   sizeof(*destinationAddress));
 
   if (numBytes < 0) {
-    perror("[ERROR] sendTo() failed");
+
+    printf("[ERROR] sendTo() failed, %d", errno);
+    perror("[ERROR] sendTo() failed;");
     return ERROR;
   }
 
