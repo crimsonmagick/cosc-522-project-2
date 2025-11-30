@@ -41,7 +41,7 @@ int lodiClientPkeSend(const PClientToPKServer *inRequest, PKServerToLodiClient *
   }
 
   pkeClient->base.start(&pkeClient->base);
-  if (pkeClient->send(pkeClient, (UserMessage *) &inRequest) == DOMAIN_FAILURE) {
+  if (pkeClient->send(pkeClient, (UserMessage *) inRequest) == DOMAIN_FAILURE) {
     printf("Unable to send registration, aborting ...\n");
     return ERROR;
   }

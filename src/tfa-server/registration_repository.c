@@ -16,7 +16,7 @@ unsigned short portStore[SIZE];
 /**
  *  Constructor
  */
-void initMessageRepository() {
+void initRegistrationRepository() {
   memset(addressStore, 0, SIZE * sizeof(struct in_addr));
   memset(portStore, 0, SIZE * sizeof(unsigned short));
 }
@@ -29,7 +29,7 @@ void initMessageRepository() {
  * @param clientPort
  * @return
  */
-int addIP(unsigned int userId, struct in_addr clientAddress, unsigned short clientPort) {
+int addIP(const unsigned int userId, const struct in_addr clientAddress, const unsigned short clientPort) {
   const unsigned int idx = userId % SIZE;
   portStore[idx] = clientPort;
   if (addressStore[idx] == NULL) {
@@ -47,7 +47,7 @@ int addIP(unsigned int userId, struct in_addr clientAddress, unsigned short clie
  * @param clientPort
  * @return
  */
-int getIP(unsigned int userId, struct in_addr *clientAddress, unsigned short *clientPort) {
+int getIP(const unsigned int userId, struct in_addr *clientAddress, unsigned short *clientPort) {
   const unsigned int idx = userId % SIZE;
   if (addressStore[idx] == 0 || portStore[idx] == 0) {
     // key not found

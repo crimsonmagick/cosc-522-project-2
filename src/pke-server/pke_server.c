@@ -16,9 +16,11 @@
 static DomainServer *pkeServer = NULL;
 
 int main() {
-  initPKEServerDomain(&pkeServer);
-  pkeServer->base.start(&pkeServer->base);
-  initMessageRepository();
+  if (initPKEServerDomain(&pkeServer) == ERROR
+    || pkeServer->base.start(&pkeServer->base) == ERROR) {
+    printf("Error, PKE server failed to start\n");
+  }
+  initKeyRepository();
 
   while (true) {
     ClientHandle receiveHandle;

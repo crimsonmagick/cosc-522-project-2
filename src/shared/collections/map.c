@@ -8,7 +8,7 @@
 
 typedef struct KeyValue {
     unsigned int key;
-    void *value;  // pointer to caller-owned data
+    void *value; // pointer to caller-owned data
 } KeyValue;
 
 typedef struct IntMapImpl {
@@ -23,7 +23,7 @@ static unsigned int hash(const unsigned int key) {
 static int map_get(IntMap *map, const unsigned int key, void **element) {
     if (!element) return ERROR;
 
-    const IntMapImpl *impl = (IntMapImpl *)map;
+    const IntMapImpl *impl = (IntMapImpl *) map;
     List *list = impl->buckets[hash(key)];
     if (!list) {
         return NOT_FOUND;
@@ -31,7 +31,7 @@ static int map_get(IntMap *map, const unsigned int key, void **element) {
 
     KeyValue *kv;
     for (int i = 0; i < list->length; i++) {
-        if (list->get(list, i, (void**)&kv) == SUCCESS && kv->key == key) {
+        if (list->get(list, i, (void **) &kv) == SUCCESS && kv->key == key) {
             *element = kv->value;
             return SUCCESS;
         }
@@ -40,9 +40,11 @@ static int map_get(IntMap *map, const unsigned int key, void **element) {
 }
 
 static int map_add(IntMap *map, const unsigned int key, void *element) {
-    if (!element) return ERROR;
+    if (!element) {
+        return ERROR;
+    }
 
-    IntMapImpl *impl = (IntMapImpl *)map;
+    IntMapImpl *impl = (IntMapImpl *) map;
     const unsigned int h = hash(key);
 
     // Lazy bucket creation
@@ -52,7 +54,9 @@ static int map_add(IntMap *map, const unsigned int key, void *element) {
     }
 
     KeyValue *kv = malloc(sizeof(KeyValue));
-    if (!kv) return ERROR;
+    if (!kv) {
+        return ERROR;
+    }
 
     kv->key = key;
     kv->value = element;
@@ -61,14 +65,13 @@ static int map_add(IntMap *map, const unsigned int key, void *element) {
 }
 
 static int map_remove(IntMap *map, const unsigned int key, void **out) {
-    IntMapImpl *impl = (IntMapImpl *)map;
+    IntMapImpl *impl = (IntMapImpl *) map;
     List *list = impl->buckets[hash(key)];
     if (!list) return ERROR;
 
     KeyValue *kv;
     for (int i = 0; i < list->length; i++) {
-        if (list->get(list, i, (void**)&kv) == SUCCESS && kv->key == key) {
-
+        if (list->get(list, i, (void **) &kv) == SUCCESS && kv->key == key) {
             if (out)
                 *out = kv->value; // caller owns
             else
@@ -85,14 +88,14 @@ static int map_remove(IntMap *map, const unsigned int key, void **out) {
 static void map_destroy(IntMap **map) {
     if (!map || !*map) return;
 
-    IntMapImpl *impl = (IntMapImpl *)(*map);
+    IntMapImpl *impl = (IntMapImpl *) (*map);
 
     for (int i = 0; i < BUCKETS; i++) {
         if (impl->buckets[i]) {
             // free KeyValue structs (but not values)
             KeyValue *kv;
             List *lst = impl->buckets[i];
-            while (lst->remove(lst, 0, (void**)&kv) == SUCCESS) {
+            while (lst->remove(lst, 0, (void **) &kv) == SUCCESS) {
                 free(kv); // free wrapper only
             }
             lst->destroy(&lst);
@@ -118,6 +121,6 @@ int createMap(IntMap **map) {
     impl->base.remove = map_remove;
     impl->base.destroy = map_destroy;
 
-    *map = (IntMap *)impl;
+    *map = (IntMap *) impl;
     return SUCCESS;
 }
