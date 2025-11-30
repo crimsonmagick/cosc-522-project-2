@@ -45,7 +45,7 @@ static int toDatagramDomainHost(DomainService *service,
                                  buf,
                                  service->outgoingSerializer.messageSize,
                                  hostAddr) == ERROR) {
-    printf("Unable to send message to domain\n");
+    perror("Unable to send message to domain\n");
     status = DOMAIN_FAILURE;
   }
 
