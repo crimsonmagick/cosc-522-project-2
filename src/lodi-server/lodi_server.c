@@ -49,7 +49,7 @@ static DomainClient *tfaClient = NULL;
 int main() {
   if (initPkeClient(&pkeClient) == ERROR
       || pkeClient->base.start(&pkeClient->base) == ERROR
-      || initLodiServerDomain(&lodiServer) == ERROR
+      || initLodiServer(&lodiServer) == ERROR
       || lodiServer->base.start(&lodiServer->base) == ERROR
       || initTfaClient(&tfaClient) == ERROR
       || tfaClient->base.start(&tfaClient->base) == ERROR) {

@@ -12,8 +12,7 @@
 static char *SERVER_ADDRESS_KEYS[] = {
   "PUBLIC_KEY_ADDRESS",
   "LODI_ADDRESS",
-  "TFA_ADDRESS",
-  "TFA_CLIENT_ADDRESS"
+  "TFA_ADDRESS"
 };
 
 static char *SERVER_PORT_KEYS[] = {
@@ -26,8 +25,7 @@ static char *SERVER_PORT_KEYS[] = {
 static char *SERVER_DEFAULT_PORTS[] = {
   "9091",
   "9092",
-  "9093",
-  "9094"
+  "9093"
 };
 
 /**

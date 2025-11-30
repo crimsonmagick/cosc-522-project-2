@@ -39,6 +39,6 @@ typedef struct {
 
 int initLodiClient(DomainClient **domainClient);
 
-int initLodiServerDomain(DomainServer **server);
+int initLodiServer(DomainServer **server);
 
 #endif

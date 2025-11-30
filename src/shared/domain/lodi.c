@@ -93,7 +93,7 @@ int initLodiClient(DomainClient **domainClient) {
   return SUCCESS;
 }
 
-int initLodiServerDomain(DomainServer **server) {
+int initLodiServer(DomainServer **server) {
   const ServerConfig serverConfig = getServerConfig(LODI);
   const MessageSerializer outgoing = {
     LODI_SERVER_RESPONSE_SIZE,
