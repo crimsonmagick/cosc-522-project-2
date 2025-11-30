@@ -54,7 +54,7 @@ int deserializeServerTFA(char *serialized, TFAServerToLodiServer *deserialized) 
  * Boilerplate DomainService constructor functions
  */
 
-int initTFAClientDomain(DomainClient **client) {
+int initTfaClient(DomainClient **client) {
   ServerConfig serverConfig = getServerConfig(TFA);
   const MessageSerializer outgoing = {
     TFA_CLIENT_REQUEST_SIZE,

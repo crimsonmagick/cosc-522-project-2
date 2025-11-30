@@ -8,7 +8,7 @@
 #define MESSAGE_DESERIALIZER_FAILURE 1
 #define DOMAIN_FAILURE 1
 
-#define DEFAULT_TIMEOUT_MS 0
+#define DEFAULT_TIMEOUT_MS 500
 #include <stdbool.h>
 
 #include "collections/list.h"

@@ -2,60 +2,43 @@
 * Provides persistence for registered client ip addresses and ports
  **/
 
-#include <string.h>
 #include "registration_repository.h"
 #include <stdlib.h>
-#include "shared.h"
+#include <string.h>
 
-#define SIZE 500
+#include "collections/int_map.h"
 
-struct in_addr *addressStore[SIZE];
 
-unsigned short portStore[SIZE];
+static IntMap *clientStore = NULL;
 
-/**
- *  Constructor
- */
-void initRegistrationRepository() {
-  memset(addressStore, 0, SIZE * sizeof(struct in_addr));
-  memset(portStore, 0, SIZE * sizeof(unsigned short));
-}
 
 /**
- * Registers the IP and Port
+ * Registers a client callback
  *
  * @param userId
- * @param clientAddress
- * @param clientPort
+ * @param clientHandleIn
  * @return
  */
-int addIP(const unsigned int userId, const struct in_addr clientAddress, const unsigned short clientPort) {
-  const unsigned int idx = userId % SIZE;
-  portStore[idx] = clientPort;
-  if (addressStore[idx] == NULL) {
-    addressStore[idx] = malloc(sizeof(struct in_addr));
+int registerClient(const unsigned int userId, const ClientHandle *clientHandleIn) {
+  if (!clientStore) {
+    createMap(&clientStore);
   }
-  *addressStore[idx] = clientAddress;
-  return SUCCESS;
+  ClientHandle *toPersist = malloc(sizeof(ClientHandle));
+  memcpy(toPersist, clientHandleIn, sizeof(ClientHandle));
+
+  return clientStore->add(clientStore, userId, (void *) toPersist);
 }
 
 /**
  * Gets the IP and port
  *
  * @param userId
- * @param clientAddress
- * @param clientPort
+ * @param clientHandleOut
  * @return
  */
-int getIP(const unsigned int userId, struct in_addr *clientAddress, unsigned short *clientPort) {
-  const unsigned int idx = userId % SIZE;
-  if (addressStore[idx] == 0 || portStore[idx] == 0) {
-    // key not found
-    return ERROR;
+int getClient(const unsigned int userId, ClientHandle **clientHandleOut) {
+  if (!clientStore) {
+    createMap(&clientStore);
   }
-
-  *clientPort = portStore[idx];
-  *clientAddress = *addressStore[idx];
-
-  return SUCCESS;
+  return clientStore->get(clientStore, userId, (void **) clientHandleOut);
 }

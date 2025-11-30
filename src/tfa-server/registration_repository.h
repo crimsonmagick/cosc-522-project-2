@@ -4,13 +4,10 @@
 
 #ifndef COSC522_LODI_KEY_REPOSITORY_H
 #define COSC522_LODI_KEY_REPOSITORY_H
+#include "domain/domain.h"
 
-#include <netinet/in.h>
+int registerClient(unsigned int userId, const ClientHandle *clientHandleIn);
 
-void initRegistrationRepository();
-
-int addIP(unsigned int userId, struct in_addr clientAddress, unsigned short clientPort);
-
-int getIP(unsigned int userId, struct in_addr *clientAddress, unsigned short *clientPort);
+int getClient(unsigned int userId, ClientHandle **clientHandleOut);
 
 #endif

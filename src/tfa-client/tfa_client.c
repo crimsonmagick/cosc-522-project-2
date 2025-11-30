@@ -19,8 +19,6 @@
 #define LOGIN_OPTION 2
 #define QUIT_OPTION 3
 
-int getMainOption();
-
 int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsigned long digitalSignature);
 
 int lodiLogin(unsigned int userID, long timestamp, long digitalSignature);
@@ -35,21 +33,19 @@ static DomainClient *tfaClient = NULL;
  * @return theoretically, 0 on success - loops forever in order to receive pushes after registration
  */
 int main() {
-    initTFAClientDomain(&tfaClient);
+    initTfaClient(&tfaClient);
     tfaClient->base.start(&tfaClient->base);
 
     printf("Welcome to the TFA Client!\n");
     unsigned int userID = getLongInput("user ID");
     unsigned long privateKey = getLongInput("private key");
     unsigned long timestamp;
-    unsigned long digitalSignature;
-
     time(&timestamp);
-    digitalSignature = encryptTimestamp(timestamp, privateKey, MODULUS);
+    unsigned long digitalSignature = encryptTimestamp(timestamp, privateKey, MODULUS);
 
     int registerStatus = registerTFAClient(userID, timestamp, digitalSignature);
     if (registerStatus == ERROR) {
-        exit(1);
+        exit(ERROR);
     }
 
     handleTFAPush();
@@ -102,7 +98,7 @@ void handleTFAPush() {
  * @return
  */
 int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsigned long digitalSignature) {
-    printf("Registring IP Address and port\n");
+    printf("Registering client details.\n");
     TFAClientOrLodiServerToTFAServer requestMessage = {
         .messageType = registerTFA,
         .userID = userID,
@@ -116,7 +112,7 @@ int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsign
         printf("Failed to send registration, aborting registration...\n");
         return ERROR;
     }
-    printf("Req B. 1., a. and b. Sent registerTFA message with timestamp=%lu, digitalSignature=%lu\n",
+    printf(" Sent registerTFA message with timestamp=%lu, digitalSignature=%lu\n",
            timestamp, digitalSignature);
 
     TFAServerToTFAClient response;
@@ -125,7 +121,11 @@ int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsign
         printf("Failed to receive registration, aborting registration...\n");
         return ERROR;
     }
-    printf("Req B. 1. c. TFA registration request was received! Client got back: messageType=%u, userID=%u\n",
+    if (response.messageType == tfaFailure) {
+        printf("Registration failed, please check your private key.\n");
+        return ERROR;
+    }
+    printf("TFA registration request was received! Client got back: messageType=%u, userID=%u\n",
            response.messageType, response.userID);
 
     // AS PER REQUIREMENTS, SEND CONFIRMATION AGAIN
@@ -135,16 +135,16 @@ int registerTFAClient(const unsigned int userID, unsigned long timestamp, unsign
         printf("Key registration failed while sending ack...\n");
         return ERROR;
     }
-    printf("Req B. 1. d. Key registration ack sent successful!\n");
+    printf("Key registration ack sent successful!\n");
 
     receiveStatus = tfaClient->receive(tfaClient, (UserMessage *) &response);
-    if (receiveStatus == DOMAIN_FAILURE) {
+    if (receiveStatus == DOMAIN_FAILURE || response.messageType == tfaFailure) {
         printf("Failed to receive final registration confirmation, aborting registration...\n");
         return ERROR;
     }
 
     printf(
-        "Extra synchronous step - TFA registration successful and finally complete! Received: messageType=%u, userID=%u\n",
+        "TFA registration successful and finally complete! Received: messageType=%u, userID=%u\n",
         response.messageType, response.userID);
 
     return sendStatus;

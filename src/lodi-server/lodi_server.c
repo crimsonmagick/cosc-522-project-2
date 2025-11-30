@@ -48,7 +48,7 @@ int main() {
       || pkeClient->base.start(&pkeClient->base) == ERROR
       || initLodiServerDomain(&lodiServer) == ERROR
       || lodiServer->base.start(&lodiServer->base) == ERROR
-      || initTFAClientDomain(&tfaClient) == ERROR
+      || initTfaClient(&tfaClient) == ERROR
       || tfaClient->base.start(&tfaClient->base) == ERROR) {
     printf("Error: Failed to initialize Lodi Server.\n");
     exit(ERROR);

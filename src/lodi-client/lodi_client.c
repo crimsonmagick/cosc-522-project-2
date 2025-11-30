@@ -66,6 +66,7 @@ int main() {
                 privateKey = getLongInput("private key");
                 time(&timestamp);
                 digitalSignature = encryptTimestamp(timestamp, privateKey, MODULUS);
+                unsigned long decrypted = decryptTimestamp(digitalSignature, publicKey, MODULUS);
                 lodiLogin(userID, timestamp, digitalSignature);
                 break;
             case QUIT_OPTION:

@@ -99,7 +99,6 @@ int receiveUdpMessage(const int socket, char *message, const size_t messageSize,
 
   char printableAddress[INET_ADDRSTRLEN];
   inet_ntop(AF_INET, &clientAddress->sin_addr, printableAddress, INET_ADDRSTRLEN);
-  printf("Received message from client %s\n", printableAddress);
 
   if (numBytes != (ssize_t) messageSize) {
     printf("Received more bytes than expected: received %zd, expected %zd. Output is truncated.\n", numBytes,

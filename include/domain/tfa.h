@@ -18,7 +18,7 @@ typedef struct {
 } TFAClientOrLodiServerToTFAServer;
 
 typedef struct {
-  enum { confirmTFA, pushTFA } messageType; /* same as unsigned int */
+  enum { confirmTFA, pushTFA, tfaFailure} messageType; /* same as unsigned int */
   unsigned int userID; /* user identifier*/
 } TFAServerToTFAClient;
 
@@ -27,7 +27,7 @@ typedef struct {
   unsigned int userID; /* user's identifier or requested user identifier*/
 } TFAServerToLodiServer;
 
-int initTFAClientDomain(DomainClient **client);
+int initTfaClient(DomainClient **client);
 
 int initTFAServerDomain(DomainServer **server);
 

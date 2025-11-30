@@ -16,11 +16,11 @@
 static volatile sig_atomic_t isRunning = 0;
 
 static int handleClientFeed(unsigned int userId, unsigned long timestamp,
-                            unsigned digitalSig);
+                            unsigned long digitalSig);
 
 static void handleSigterm(int sig);
 
-int startStreamFeed(unsigned int userId, unsigned int timestamp, unsigned int digitalsig) {
+int startStreamFeed(unsigned int userId, unsigned long timestamp, unsigned long digitalsig) {
   int pid = fork();
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
@@ -44,7 +44,7 @@ void stopStreamFeed(int pid) {
 }
 
 static int handleClientFeed(unsigned int userId, unsigned long timestamp,
-                            unsigned digitalSig) {
+                            unsigned long digitalSig) {
   printf("Initializing feed...\n");
   DomainClient *client;
   if (initLodiClient(&client) == DOMAIN_FAILURE) {
