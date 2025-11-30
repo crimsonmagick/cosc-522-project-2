@@ -82,6 +82,26 @@ int main() {
     exit(0);
 }
 
+int lodiLogout(const unsigned int userID, const unsigned long timestamp, const unsigned long digitalSignature) {
+    PClientToLodiServer request = {
+        .messageType = logout,
+        .userID = userID,
+        .recipientID = 0,
+        .timestamp = timestamp,
+        .digitalSig = digitalSignature
+    };
+
+    LodiServerMessage response;
+
+    const int status = lodiClientSend(&request, &response);
+    if (status != DOMAIN_SUCCESS || response.messageType == failure) {
+        printf("[USER] Warning - logout failed.\n");
+    } else {
+        printf("[USER] Logged out successfully.\n");
+    }
+    return status;
+}
+
 /**
  * Registers the publicKey against the PKE server. Fulfills requirement A. 1.
  *
@@ -220,8 +240,7 @@ int lodiLogin(const unsigned int userID, const unsigned long timestamp, const un
                 break;
             case LODI_LOGOUT:
                 stopStreamFeed(pid);
-                // TODO send logout message
-                printf("Logged out\n");
+                lodiLogout(userID, timestamp, digitalSignature);
                 return SUCCESS;
             default:
                 printf("Please enter a valid option\n");

@@ -32,6 +32,8 @@ static int sendPushRequest(unsigned int userID);
 
 static void handleLogin(PClientToLodiServer *request, ClientHandle *clientHandle);
 
+static void handleLogout(PClientToLodiServer *request, ClientHandle *clientHandle);
+
 static void handlePost(PClientToLodiServer *request, ClientHandle *clientHandle);
 
 static void handleFollow(PClientToLodiServer *request, ClientHandle *clientHandle);
@@ -78,6 +80,8 @@ int main() {
     } else if (authenticate(&request) == ERROR || !isUserLoggedIn(&remoteHandle)) {
       printf("Authentication failed for userId=%d", request.userID);
       handleFailure(&request, &remoteHandle);
+    } else if (request.messageType == logout) {
+      handleLogout(&request, &remoteHandle);
     } else if (request.messageType == post) {
       handlePost(&request, &remoteHandle);
     } else if (request.messageType == follow) {
@@ -137,6 +141,29 @@ static void handleLogin(PClientToLodiServer *request, ClientHandle *clientHandle
 
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
     printf("Warning: Error while sending Lodi login response.\n");
+  }
+}
+
+static void handleLogout(PClientToLodiServer *request, ClientHandle *clientHandle) {
+  printf("[LODI_SERVER] logging out user...\n");
+
+  LodiServerMessage responseMessage = {
+    .userID = request->userID
+  };
+  if (authenticate(request) == SUCCESS) {
+    responseMessage.messageType = ackLogout;
+  } else {
+    responseMessage.messageType = failure;
+  }
+
+  if (isUserLoggedIn(clientHandle)) {
+    userLogout(clientHandle);
+  } else {
+    printf("[LODI_SERVER] Warning... user was already logged out\n");
+  }
+
+  if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
+    printf("Warning: Error while sending Lodi logout response.\n");
   }
 }
 
