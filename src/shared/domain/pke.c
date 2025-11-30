@@ -108,6 +108,7 @@ int initPkeClient(DomainClient **client) {
   if (createClient(options, client) != DOMAIN_SUCCESS) {
     return ERROR;
   }
+  printf("Configured PKE client with address=%s, port=%s", serverConfig.address, serverConfig.port);
   return SUCCESS;
 }
 
