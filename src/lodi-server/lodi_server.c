@@ -297,7 +297,7 @@ static void pushFeedMessage(const unsigned int idolId, char *message) {
     for (int j = 0; j < listeners->length; j++) {
       ClientHandle *listener;
       listeners->get(listeners, j, (void **) &listener);
-      if (listener->userID == *followerId) {
+      if (isUserLoggedIn(listener) && listener->userID == *followerId) {
         responseMessage.userID = *followerId;
         const int sendStatus = lodiServer->send(lodiServer, (UserMessage *) &responseMessage, listener);
         if (sendStatus != DOMAIN_SUCCESS) {
