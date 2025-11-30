@@ -47,7 +47,7 @@ int addMessage(unsigned int userId, char *message) {
   return SUCCESS;
 }
 
-int getMessages(unsigned int userId, List **outMessages) {
+int getMessages(const unsigned int userId, List **outMessages) {
   if (userMessages == NULL) {
     createMap(&userMessages);
   }

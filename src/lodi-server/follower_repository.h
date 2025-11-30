@@ -4,9 +4,9 @@
 
 void initFollowerRepository();
 
-int getIdolFollowers(const unsigned int idolId, List **followers);
+int getIdolFollowers(unsigned int idolId, List **followers);
 
-int getFollowerIdols(const unsigned int followerId, List **idols);
+int getFollowerIdols(unsigned int followerId, List **idols);
 
 int addFollower(unsigned int idolId, unsigned int followerId);
 

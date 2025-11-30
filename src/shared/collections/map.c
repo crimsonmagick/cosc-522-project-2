@@ -7,7 +7,7 @@
 #define BUCKETS 100
 
 typedef struct KeyValue {
-    int key;
+    unsigned int key;
     void *value;  // pointer to caller-owned data
 } KeyValue;
 
@@ -16,11 +16,11 @@ typedef struct IntMapImpl {
     List *buckets[BUCKETS];
 } IntMapImpl;
 
-static int hash(const int key) {
-    return (key < 0 ? -key : key) % BUCKETS;
+static unsigned int hash(const unsigned int key) {
+    return key % BUCKETS;
 }
 
-static int map_get(IntMap *map, int key, void **element) {
+static int map_get(IntMap *map, const unsigned int key, void **element) {
     if (!element) return ERROR;
 
     const IntMapImpl *impl = (IntMapImpl *)map;
@@ -39,11 +39,11 @@ static int map_get(IntMap *map, int key, void **element) {
     return NOT_FOUND;
 }
 
-static int map_add(IntMap *map, int key, void *element) {
+static int map_add(IntMap *map, const unsigned int key, void *element) {
     if (!element) return ERROR;
 
     IntMapImpl *impl = (IntMapImpl *)map;
-    int h = hash(key);
+    const unsigned int h = hash(key);
 
     // Lazy bucket creation
     if (!impl->buckets[h]) {
@@ -60,7 +60,7 @@ static int map_add(IntMap *map, int key, void *element) {
     return impl->buckets[h]->append(impl->buckets[h], kv);
 }
 
-static int map_remove(IntMap *map, int key, void **out) {
+static int map_remove(IntMap *map, const unsigned int key, void **out) {
     IntMapImpl *impl = (IntMapImpl *)map;
     List *list = impl->buckets[hash(key)];
     if (!list) return ERROR;

@@ -96,7 +96,7 @@ static int addFollowerIdol(unsigned int idolId, unsigned int followerId) {
       return SUCCESS;
     }
   }
-  int *persistedIdolId = malloc(sizeof(unsigned int));
+  unsigned int *persistedIdolId = malloc(sizeof(unsigned int));
   if (!persistedIdolId) {
     return ERROR;
   }
@@ -129,7 +129,7 @@ static int addIdolFollower(unsigned int idolId, unsigned int followerId) {
       return SUCCESS;
     }
   }
-  int *persistedFollowerId = malloc(sizeof(unsigned int));
+  unsigned int *persistedFollowerId = malloc(sizeof(unsigned int));
   if (!persistedFollowerId) {
     return ERROR;
   }
