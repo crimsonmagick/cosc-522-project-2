@@ -81,8 +81,10 @@ static int handleClientFeed(unsigned int userId, unsigned long timestamp,
       printf("Received feed message: idolId=%u, message=%s", response.recipientID, response.message);
     } else if (clientRet == TERMINATED) {
       client->base.stop(&client->base);
-      printf("Connection has been terminated, will attempt to reconnect in %d seconds.\n", CONNECT_BACKOFF);
-      sleep(CONNECT_BACKOFF);
+      if (isRunning) {
+        printf("Connection has been unexpectedly terminated, will attempt to reconnect in %d seconds.\n", CONNECT_BACKOFF);
+        sleep(CONNECT_BACKOFF);
+      }
     } else {
       printf("Impossible state... Exiting...\n");
       return ERROR;

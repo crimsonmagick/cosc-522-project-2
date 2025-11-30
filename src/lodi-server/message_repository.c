@@ -1,57 +1,58 @@
-/**
-* Provides persistence for registered client ip addresses and ports
- **/
-
-#include <string.h>
 
 #include "message_repository.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "shared.h"
+#include "collections/int_map.h"
+#include "collections/list.h"
 
 #define SIZE 500
 #define MAX_MESSAGE_COUNT 100
 #define MESSAGE_SIZE 100
 
-char **messages[SIZE];
-int messageCounts[SIZE];
-
-/**
- *  Constructor
- */
-void initMessageRepository() {
-  memset(messages, 0, SIZE * sizeof(char **));
-  memset(messageCounts, 0, SIZE * sizeof(int));
-}
-
+IntMap *userMessages;
 
 int addMessage(unsigned int userId, char *message) {
-  const unsigned int idx = userId % SIZE;
-  if (messages[idx] == NULL) {
-    messages[idx] = malloc(sizeof(char *) * MAX_MESSAGE_COUNT);
-    for (int i = 0; i < MAX_MESSAGE_COUNT; i++) {
-      messages[idx][i] = malloc(MESSAGE_SIZE);
+  if (userMessages == NULL) {
+    createMap(&userMessages);
+  }
+
+  List *messages = NULL;
+  const int rv = userMessages->get(userMessages, userId, (void **) &messages);
+  if (rv == ERROR) {
+    printf("[MessageRepository] Error while persisting user message for userId=%d; unknown map error.", userId);
+    return ERROR;
+  }
+  if (rv == NOT_FOUND) {
+    if (createList(&messages) == ERROR ||
+        userMessages->add(userMessages, userId, messages) == ERROR) {
+      printf("[MessageRepository] Error while persisting user message for userId=%d; failure while creating list.",
+             userId);
+      return ERROR;
     }
   }
-  if (messageCounts[userId] < MAX_MESSAGE_COUNT) {
-    memcpy(messages[idx][messageCounts[userId]], message, MESSAGE_SIZE);
-    messageCounts[userId]++;
-  } else {
-    printf("Warning: max messages reached for user with userId=%u. Skipping persistence.", userId);
+
+  char *toPersist = malloc(MESSAGE_SIZE * sizeof(char));
+  if (toPersist == NULL) {
+    printf("[MessageRepository] Error while persisting user message for userId=%d; malloc() failure.", userId);
+    return ERROR;
   }
+  memcpy(toPersist, message, MESSAGE_SIZE);
+  if (messages->append(messages, toPersist) == ERROR) {
+    printf("[MessageRepository] Error while persisting user message for userId=%d; failed to append message.", userId);
+    free(toPersist);
+    return ERROR;
+  }
+
   return SUCCESS;
 }
 
-int getMessages(unsigned int userId, char ***outMessages, int *messageCount) {
-  const unsigned int idx = userId % SIZE;
-  if (messages[idx] == NULL) {
-    // key not found
-    return ERROR;
+int getMessages(unsigned int userId, List **outMessages) {
+  if (userMessages == NULL) {
+    createMap(&userMessages);
   }
-  *outMessages = messages[idx];
-  *messageCount = messageCounts[userId];
-
-  return SUCCESS;
+  return userMessages->get(userMessages, userId, (void **) outMessages);
 }

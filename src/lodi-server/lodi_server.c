@@ -42,11 +42,14 @@ void handleFeed(unsigned int userId, ClientHandle *remoteHandle) {
     int *idolId;
     idols->get(idols, i, (void **) &idolId);
     responseMessage.recipientID = *idolId;
-    int messageCount = 0;
-    char **outMessages;
-    getMessages(*idolId, &outMessages, &messageCount);
-    for (int j = 0; j < messageCount; j++) {
-      memcpy(responseMessage.message, outMessages[j], 100 * sizeof(char));
+    List *messages;
+    if (getMessages(*idolId, &messages) != SUCCESS) {
+      continue;
+    }
+    for (int j = 0; j < messages->length; j++) {
+      char *message = NULL;
+      messages->get(messages, i, (void **) &message);
+      memcpy(responseMessage.message, message, 100 * sizeof(char));
       const int sendSuccess = lodiServer->send(lodiServer, (UserMessage *) &responseMessage, remoteHandle);
       if (sendSuccess == ERROR) {
         printf("Error while responding to initial feed request. Continuing...\n");
@@ -86,7 +89,6 @@ int sendPushRequest(const unsigned int userID) {
 void pushFeedMessage(unsigned int idolId, char *message, int messageLength) {
   List *followers;
   if (getIdolFollowers(idolId, &followers) != SUCCESS) {
-    printf("Warning... no followers for idolId=$d", idolId);
     return;
   }
   List *listeners;
@@ -129,7 +131,6 @@ int main() {
     exit(-1);
   }
   initTFAClientDomain(&tfaClient, false);
-  initMessageRepository();
   initFollowerRepository();
   initListenerRepository();
   tfaClient->base.start(&tfaClient->base);
@@ -182,12 +183,6 @@ int main() {
     } else if (receivedMessage.messageType == post) {
       printf("Persisting idol message, message=%s...\n", receivedMessage.message);
       addMessage(receivedMessage.userID, receivedMessage.message);
-      char **messages;
-      int messageCount;
-      getMessages(receivedMessage.userID, &messages, &messageCount);
-      for (int i = 0; i < messageCount; i++) {
-        printf("Message %d: %s\n", i, messages[i]);
-      }
       pushFeedMessage(receivedMessage.userID, receivedMessage.message, 100);
       responseMessageType = ackPost;
     } else if (receivedMessage.messageType == follow) {

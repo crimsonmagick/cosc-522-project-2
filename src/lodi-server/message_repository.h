@@ -4,11 +4,10 @@
 
 #ifndef COSC522_LODI_KEY_REPOSITORY_H
 #define COSC522_LODI_KEY_REPOSITORY_H
-
-void initMessageRepository();
+#include "collections/list.h"
 
 int addMessage(unsigned int userId, char *message);
 
-int getMessages(unsigned int userId, char ***outMessages, int *messageCount);
+int getMessages(unsigned int userId, List **outMessages);
 
 #endif
