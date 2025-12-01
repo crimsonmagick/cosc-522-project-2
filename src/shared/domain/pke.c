@@ -35,6 +35,10 @@ int getPublicKey(DomainClient *client, const unsigned int userID, unsigned int *
     printf("[ERROR] Failed to receive public key, aborting ...\n");
     return ERROR;
   }
+  if (responseMessage.messageType == ackPKFail) {
+    printf("[ERROR] Public Key not found, aborting ...\n");
+    return ERROR;
+  }
 
   printf("[DEBUG] Received public key successfully! Received: messageType=%u, userID=%u, publicKey=%u\n",
          responseMessage.messageType, responseMessage.userID, responseMessage.publicKey);

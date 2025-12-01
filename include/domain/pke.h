@@ -11,7 +11,7 @@
 #include "domain/domain.h"
 
 typedef struct {
-  enum { ackRegisterKey, responsePublicKey } messageType; /* same as unsigned int */
+  enum { ackRegisterKey, responsePublicKey, ackPKFail} messageType; /* same as unsigned int */
   unsigned int userID; /* user identifier or user identifier of requested public key*/
   unsigned int publicKey; /* registered public key or requested public key */
 } PKServerToLodiClient;
