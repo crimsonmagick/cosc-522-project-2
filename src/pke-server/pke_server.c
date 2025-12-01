@@ -16,9 +16,12 @@
 static DomainServer *pkeServer = NULL;
 
 int main() {
-  if (initPKEServer(&pkeServer) == ERROR
-      || pkeServer->base.start(&pkeServer->base) == ERROR) {
-    printf("Error, PKE server failed to start\n");
+  if (initPKEServer(&pkeServer) == ERROR) {
+    printf("init failed");
+    return ERROR;
+  }
+  if (pkeServer->base.start(&pkeServer->base) == ERROR) {
+    printf("start failed");
     return ERROR;
   }
 
@@ -53,7 +56,8 @@ int main() {
       responseMessage.messageType = responsePublicKey;
       printf("Req D. 2. b. responding to requestKey message with responsePublicKey\n");
     } else {
-      printf("Warning: Received message with unknown message type.\n");
+      printf("Warning: Received message with unknown message type. Skipping...\n");
+      continue;
     }
 
     if (pkeServer->send(pkeServer, (UserMessage *) &responseMessage, &receiveHandle) == ERROR) {
