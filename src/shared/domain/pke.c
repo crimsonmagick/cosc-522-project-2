@@ -96,7 +96,7 @@ int initPkeClient(DomainClient **client) {
   const DomainClientOpts options = {
     .baseOpts = {
       .localPort = 0,
-      .localHost = NULL,
+      .localHost = "10.202.0.2",
       .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
       .outgoingSerializer = outgoing,
       .incomingDeserializer = incoming,
