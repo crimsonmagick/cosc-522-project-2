@@ -119,7 +119,7 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
 
   if (numBytes < 0) {
 
-    printf("[ERROR] sendTo() failed, %d", errno);
+    printf("[ERROR] sendTo() failed, %d\n", errno);
     perror("[ERROR] sendTo() failed;");
     return ERROR;
   }

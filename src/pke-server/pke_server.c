@@ -19,7 +19,10 @@ int main() {
   if (initPKEServerDomain(&pkeServer) == ERROR
       || pkeServer->base.start(&pkeServer->base) == ERROR) {
     printf("Error, PKE server failed to start\n");
+    return ERROR;
   }
+
+  printf("Started PKE server!\n");
 
   while (true) {
     ClientHandle receiveHandle;
