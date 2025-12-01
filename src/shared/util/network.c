@@ -117,6 +117,9 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
   const ssize_t numBytes = sendto(socket, messageBuffer, messageSize, 0, (struct sockaddr *) destinationAddress,
                                   sizeof(*destinationAddress));
 
+  printf("sendUdpMessage - %u, %u, %u\n", destinationAddress->sin_addr.s_addr,
+    destinationAddress->sin_port, destinationAddress->sin_family);
+
   if (numBytes < 0) {
 
     printf("[ERROR] sendTo() failed, %d\n", errno);
