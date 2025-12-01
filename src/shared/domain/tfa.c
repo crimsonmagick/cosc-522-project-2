@@ -67,6 +67,7 @@ int initTfaClient(DomainClient **client) {
   DomainClientOpts options = {
     .baseOpts = {
       .localPort = 0,
+      .localHost = NULL,
       .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
       .outgoingSerializer = outgoing,
       .incomingDeserializer = incoming,
@@ -94,6 +95,7 @@ int initTFAServerDomain(DomainServer **server) {
   };
   const DomainServiceOpts options = {
     .localPort = atoi(serverConfig.port),
+    .localHost = serverConfig.address,
     .receiveTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming,

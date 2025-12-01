@@ -53,6 +53,30 @@ int getSocket(const struct sockaddr_in *address, const struct timeval *timeout, 
   return sock;
 }
 
+int getDefaultLocalAddress(struct sockaddr_in *remote, struct sockaddr_in *localAddressOut) {
+  int tempSock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (tempSock< 0) {
+    printf("Error getting temp socket for address resoultion\n");
+    return ERROR;
+  }
+  if (connect(tempSock, (struct sockaddr *) remote, sizeof(*remote)) < 0) {
+    printf("Unable to connect for address resolution\n");
+    close(tempSock);
+    return ERROR;
+  }
+  socklen_t len = sizeof(*localAddressOut);
+  if (getsockname(tempSock, (struct sockaddr *) localAddressOut, &len) < 0) {
+    printf("Unable to get sockname for default local address\n.");
+    close(tempSock);
+    return ERROR;
+  }
+  char buf[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &localAddressOut->sin_addr, buf, sizeof(buf));
+  printf("Primary local IP: %s\n", buf);
+  close(tempSock);
+  return SUCCESS;
+}
+
 /**
  * Gets a network address from an ASCII IP address and a port
  * @param ipAddress
@@ -119,10 +143,9 @@ int sendUdpMessage(const int socket, const char *messageBuffer, const size_t mes
                                   sizeof(*destinationAddress));
 
   printf("sendUdpMessage - %u, %u, %u\n", destinationAddress->sin_addr.s_addr,
-    destinationAddress->sin_port, destinationAddress->sin_family);
+         destinationAddress->sin_port, destinationAddress->sin_family);
 
   if (numBytes < 0) {
-
     printf("[ERROR] sendTo() failed, %d\n", errno);
     perror("[ERROR] sendTo() failed;");
     return ERROR;

@@ -93,6 +93,10 @@ int createClient(DomainClientOpts options, DomainClient **client) {
     (*client)->base.stop = stopStreamClient;
   }
   (*client)->remoteAddr = getNetworkAddress(options.remoteHost, options.remotePort);
+  if (getDefaultLocalAddress(&(*client)->remoteAddr, &(*client)->base.localAddr)) {
+    printf("[ERROR] Failed to get local address and port");
+    return DOMAIN_FAILURE;
+  }
 
   return DOMAIN_SUCCESS;
 }

@@ -78,6 +78,7 @@ int initLodiClient(DomainClient **domainClient) {
   const DomainClientOpts options = {
     .baseOpts = {
       .localPort = -1,
+      .localHost = NULL,
       .receiveTimeoutMs = DEFAULT_TIMEOUT_MS,
       .connectionType = STREAM,
       .outgoingSerializer = outgoing,
@@ -106,6 +107,7 @@ int initLodiServer(DomainServer **server) {
 
   const DomainServiceOpts options = {
     .localPort = atoi(serverConfig.port),
+    .localHost = serverConfig.address,
     .receiveTimeoutMs = 0,
     .outgoingSerializer = outgoing,
     .incomingDeserializer = incoming,
