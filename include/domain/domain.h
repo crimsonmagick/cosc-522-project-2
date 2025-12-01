@@ -39,6 +39,7 @@ typedef struct {
 
 typedef struct DomainServiceOpts {
   int localPort; // optional
+  char *localHost;
   int receiveTimeoutMs; // optional
   enum ConnectionType connectionType; // required
   MessageSerializer outgoingSerializer; // required

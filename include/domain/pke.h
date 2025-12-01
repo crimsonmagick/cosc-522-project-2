@@ -30,7 +30,7 @@ typedef struct {
 
 int initPkeClient(DomainClient **client);
 
-int initPKEServerDomain(DomainServer **server);
+int initPKEServer(DomainServer **server);
 
 /**
  * Gets the public key for a user for the PKE Server

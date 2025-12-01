@@ -37,12 +37,10 @@ static void initializeGenericService(DomainServiceOpts options,
   const int receiveTimeoutMs =
       options.receiveTimeoutMs > 0 ? options.receiveTimeoutMs : 0;
   service->receiveTimeout = createTimeout(receiveTimeoutMs);
+  const char * localAddress = options.localHost == NULL ? LOCALHOST : options.localHost;
+  const int localPort = options.localPort > 0 ? options.localPort : 0;
 
-  if (options.localPort > 0) {
-    service->localAddr = getNetworkAddress(LOCALHOST, options.localPort);
-  } else {
-    service->localAddr = getNetworkAddress(LOCALHOST, 0);
-  }
+  service->localAddr = getNetworkAddress(localAddress, localPort);
   service->incomingDeserializer = options.incomingDeserializer;
   service->outgoingSerializer = options.outgoingSerializer;
   service->changeTimeout = changeTimeout;

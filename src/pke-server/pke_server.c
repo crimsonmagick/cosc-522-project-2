@@ -16,7 +16,7 @@
 static DomainServer *pkeServer = NULL;
 
 int main() {
-  if (initPKEServerDomain(&pkeServer) == ERROR
+  if (initPKEServer(&pkeServer) == ERROR
       || pkeServer->base.start(&pkeServer->base) == ERROR) {
     printf("Error, PKE server failed to start\n");
     return ERROR;
