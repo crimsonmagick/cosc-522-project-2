@@ -11,13 +11,11 @@
 #include "domain/lodi.h"
 #include "domain/pke.h"
 
-static DomainClient *lodiClient = NULL;
 static DomainClient *pkeClient = NULL;
 
 int lodiClientSend(const PClientToLodiServer *inRequest, LodiServerMessage *outResponse) {
-  if (lodiClient == NULL) {
-    initLodiClient(&lodiClient);
-  }
+  DomainClient *lodiClient = NULL;
+  initLodiClient(&lodiClient);
 
   lodiClient->base.start(&lodiClient->base);
 
@@ -30,7 +28,9 @@ int lodiClientSend(const PClientToLodiServer *inRequest, LodiServerMessage *outR
     status = ERROR;
   }
 
-  lodiClient->base.stop(&lodiClient->base);
+  DomainService *baseRef = &lodiClient->base;
+  lodiClient->base.stop(baseRef);
+  lodiClient->base.destroy(&baseRef);
   return status;
 }
 
