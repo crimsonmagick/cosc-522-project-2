@@ -78,17 +78,20 @@ tmux a -t lodi_client
 ### Running a program and switching sessions:
 
 
-Let's start the lodi_client program:
+Let's start the lodi_server program:
 
 ```
-./lodi_client
+./lodi_server
 ```
 
 You should see the program running successfully:
 
 ```
-Welcome to the Lodi Client!
-Please enter your user ID:
+Primary local IP: 127.0.0.1
+Configured PKE client with address=127.0.0.1, port=9091
+[DEBUG] Attempting to listen...
+Listen initiated!
+Primary local IP: 127.0.0.1
 ```
 
 To switch to another session, press `ctrl+b s`. You should see all 5 sessions:
@@ -116,6 +119,10 @@ Use the up and down arrows to select another session, and press enter to select 
     * `./tfa_server`
 
 As per specs, only the clients can be interacted with directly. The server sessions will only have reactive output.
+
+### Important Note
+Please start up each of the servers before running the client programs. The clients will only properly connect if the
+server ports are open.
 
 ### Generating a public/private key pair
 Optionally use the `rsa_generate` program to generate the private/public key pair:
