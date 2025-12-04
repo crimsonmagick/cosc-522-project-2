@@ -107,7 +107,7 @@ static int authenticate(PClientToLodiServer *request) {
   }
   const unsigned long decrypted = decryptTimestamp(request->digitalSig, publicKey, MODULUS);
   if (decrypted == request->timestamp) {
-    printf(" [DEBUG] Decrypted timestamp successfully! timestamp=%lu \n", decrypted);
+    printf("[DEBUG] Decrypted timestamp successfully! timestamp=%lu \n", decrypted);
     return SUCCESS;
   }
   printf("[ERROR] Failed to decrypt timestamp! timestamp=%lu, decrypted=%lu \n",

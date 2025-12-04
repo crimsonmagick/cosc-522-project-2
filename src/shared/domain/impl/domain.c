@@ -53,7 +53,7 @@ int createServer(const DomainServiceOpts options, DomainServer **server) {
     return DOMAIN_FAILURE;
   }
   if (options.connectionType == DATAGRAM) {
-    (*server)->base.start = startDatagramService;
+    (*server)->base.start = startDatagramServer;
     (*server)->base.stop = stopDatagramService;
     (*server)->receive = datagramServerReceive;
     (*server)->send = datagramServerSend;
@@ -83,7 +83,7 @@ int createClient(DomainClientOpts options, DomainClient **client) {
   if (options.baseOpts.connectionType == DATAGRAM) {
     (*client)->receive = datagramClientReceive;
     (*client)->send = datagramClientSend;
-    (*client)->base.start = startDatagramService;
+    (*client)->base.start = startDatagramClient;
     (*client)->base.stop = stopDatagramService;
   } else {
     (*client)->receive = streamClientReceive;

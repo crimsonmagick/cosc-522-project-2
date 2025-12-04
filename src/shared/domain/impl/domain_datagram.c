@@ -134,8 +134,19 @@ static int datagramServerReceive(DomainServer *self, UserMessage *toReceive,
   return resp;
 }
 
-static int startDatagramService(DomainService *service) {
+static int startDatagramServer(DomainService *service) {
   const int sock = getSocket(&service->localAddr,
+                             &service->receiveTimeout,
+                             service->connectionType);
+  if (sock < 0) {
+    return DOMAIN_FAILURE;
+  }
+  service->sock = sock;
+  return DOMAIN_SUCCESS;
+}
+
+static int startDatagramClient(DomainService *service) {
+  const int sock = getSocket(NULL,
                              &service->receiveTimeout,
                              service->connectionType);
   if (sock < 0) {
