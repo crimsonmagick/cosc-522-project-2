@@ -1,3 +1,7 @@
+/**
+ * Responsible for streaming posts from followed idols.
+ */
+
 #ifndef COSC522_LODI_PRINT_FEED_H
 #define COSC522_LODI_PRINT_FEED_H
 

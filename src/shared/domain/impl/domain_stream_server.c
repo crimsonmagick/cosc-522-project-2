@@ -1,3 +1,7 @@
+/**
+* Implementation of TCP Server
+*/
+
 #include "domain_stream_shared.h"
 
 static int streamServerSend(DomainServer *self, UserMessage *toSend,

@@ -1,3 +1,7 @@
+/**
+ * See list.h
+ */
+
 #include <stdlib.h>
 
 #include "collections/list.h"

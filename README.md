@@ -1,20 +1,20 @@
-# COSC 522 Project #1: Implementing Two-Factor Authentication using UDP Sockets
+# COSC 522 Project #2: Following Idol Posts using TCP Sockets
 
 Authors: **Ardeshir (Ari) Hassani and Welby Seely**
-Github Repository: https://github.com/crimsonmagick/cosc-522-project-1
+Github Repository: https://github.com/crimsonmagick/cosc-522-project-2
 
 ## Building project
 First, either clone or unzip the project in the parent directory of your choice:
 
 e.g. cloning with ssh:
 ```
-git clone git@github.com:crimsonmagick/cosc-522-project-1.git
+git clone git@github.com:crimsonmagick/cosc-522-project-2.git
 ```
 
 Next, change into the directory:
 
 ```
-cd cosc-522-project-1
+cd cosc-522-project-2
 ```
 
 Create a build directory and change into it:
@@ -144,23 +144,27 @@ There are 5 targets, one for each executable. Header files and shared source fil
 All shared source files use headers (`.h` files) to establish public interfaces. These can be found under 
 `{project_root}/include`. 
 
-There are two major subdirectories in `include`:
+There are three major subdirectories in `include`:
 
-1. `messaging`
+1. `collections`
+   * Implementations for the two collection data structures used in the project
+       1. `int_map.h` Hash Map using `int` as the key type
+       2. `list.h` Linked List implementation
+2. `domain`
    * Shared interfaces for interactions between the 5 programs are provided in here:
-     1. `lodi_messaging.h` for the "Lodi" domain
-     2. `pke_messaging.h` for the "Public Key Services" domain
-     3. `tfa_messaing.h` for the "Two Factor Authentication" domain
-     4. `udp.h` for raw UDP interactions and functionality
-2. `util`
+     1. `lodi.h` for the "Lodi" domain
+     2. `pke.h` for the "Public Key Services" domain
+     3. `tfa.h` for the "Two Factor Authentication" domain
+3. `util`
    * Shared interfaces for common general-use functionality
      1. `buffers.h` for managing buffers and byte-order
-     2. `rsa.h` for providing core encryption functionality
-     3. `server_configs.h` for providing easy access to server configuration information (addresses and ports)
-3. root header files
-   * There are two other header files in the root `include` dir
-     1. `domain.h`, this is part of a refactor to clean up server-client interactions using a stateful service design
-     2. `shared.h`, providing common constants for the application
+     2. `input.h` utility functions for user input
+     3. `network.h` for raw UDP interactions and functionality
+     4. `rsa.h` for providing core encryption functionality
+     5. `server_configs.h` for providing easy access to server configuration information (addresses and ports)
+4. root header files
+   * There is one other header file in the root `include` dir
+     1. `shared.h`, providing common constants for the application
 
 ## Project Source Implementation Files
 
@@ -175,7 +179,8 @@ directory. The files and directory structure mirror the "include" directory stru
 For purposes of this project, we generate a usable private/public key pair under the "rsa_generate" target. Its source 
 can be found in `{project_root}/src/rsa-utils/rsa_generate.c`. This is one additional target built by CMake.
 
-
+## GCP Screenshots
+Can be found in [GCP_SCREENSHOTS.md](GCP_SCREENSHOTS.md)
 
 
 

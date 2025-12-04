@@ -1,3 +1,7 @@
+/**
+* Shared functions between TCP Server and Client
+*/
+
 #ifndef COSC522_LODI_DOMAIN_STREAM_SHARED_H
 #define COSC522_LODI_DOMAIN_STREAM_SHARED_H
 #include "domain_shared.h"

@@ -1,3 +1,7 @@
+/**
+ * Manages the lifecycle of a logged-in user.
+ */
+
 #ifndef COSC522_LODI_LOGIN_REPOSITORY_H
 #define COSC522_LODI_LOGIN_REPOSITORY_H
 #include "domain/domain.h"

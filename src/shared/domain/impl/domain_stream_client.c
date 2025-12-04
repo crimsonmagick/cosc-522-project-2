@@ -1,3 +1,7 @@
+/**
+* Implementation of TCP Client.
+*/
+
 #include "domain_stream_shared.h"
 
 static int streamClientFromHost(DomainClient *client, void *message) {

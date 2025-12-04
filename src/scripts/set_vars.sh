@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+#convenience script for GCP IP env vars
+
 export PUBLIC_KEY_ADDRESS=10.202.0.3
 export LODI_ADDRESS=10.202.0.2
 export TFA_ADDRESS=10.202.0.4

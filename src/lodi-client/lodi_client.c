@@ -5,6 +5,7 @@
  *    See registerPublicKey() for the implementation of this functionality
  * 2) Authenticates against the Lodi Server
  *    See lodiLogin() for the implementation of this functionality.
+ * 3) Implements logged-in Lodi messaging functionality (follow, unfollow, post, and logout)
  **/
 
 #include <stdio.h>

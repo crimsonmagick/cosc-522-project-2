@@ -1,3 +1,7 @@
+/**
+ * Manages the lifecycle of a "listener" i.e. a logged-in user streaming idol messages in real time.
+ */
+
 #ifndef COSC522_LODI_LISTENER_REPOSITORY_H
 #define COSC522_LODI_LISTENER_REPOSITORY_H
 #include "collections/list.h"

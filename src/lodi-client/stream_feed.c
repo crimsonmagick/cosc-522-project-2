@@ -1,3 +1,7 @@
+/*
+ * See stream_feed.h
+ */
+
 #include "stream_feed.h"
 
 #include <signal.h>

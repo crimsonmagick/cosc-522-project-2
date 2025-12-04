@@ -5,6 +5,7 @@
  *   1)  Authenticates the client's digital signature against the associated publicKey
  *   2)  Performs TFA after the digital signature is validated
  *   3)  Responds to the user with a "success" message if both phases succeed
+ * After login, handles Lodi Post, Follow, Unfollow, and Logout
  **/
 
 #include <stdio.h>

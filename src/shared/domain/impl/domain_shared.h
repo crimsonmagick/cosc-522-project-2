@@ -1,3 +1,7 @@
+/**
+ * Shared constants for domain translation unit.
+ */
+
 #ifndef COSC522_LODI_DOMAIN_SHARED_H
 #define COSC522_LODI_DOMAIN_SHARED_H
 

@@ -1,3 +1,7 @@
+/**
+* See map.h
+ */
+
 #include <stdlib.h>
 
 #include "collections/int_map.h"

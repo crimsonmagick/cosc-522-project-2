@@ -1,3 +1,7 @@
+/**
+ * See `login_repository.h`
+ */
+
 #include "collections/int_map.h"
 #include "login_repository.h"
 

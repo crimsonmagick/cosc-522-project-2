@@ -1,3 +1,7 @@
+/*
+ * See lodi_client_domain_manager.h
+ */
+
 #include "lodi_client_domain_manager.h"
 
 #include <stdio.h>

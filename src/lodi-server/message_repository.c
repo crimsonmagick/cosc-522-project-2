@@ -1,4 +1,6 @@
-
+/**
+ * See message_repository.h
+ */
 #include "message_repository.h"
 
 #include <stdio.h>

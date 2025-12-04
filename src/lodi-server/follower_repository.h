@@ -1,3 +1,7 @@
+/*
+* Manages Lodi follower operations
+ */
+
 #ifndef COSC522_LODI_FOLLOWER_REPOSITORY_H
 #define COSC522_LODI_FOLLOWER_REPOSITORY_H
 #include "collections/list.h"

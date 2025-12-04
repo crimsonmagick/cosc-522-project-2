@@ -1,3 +1,7 @@
+/**
+ * Implementation of UDP Client and Server
+ */
+
 #include "domain_shared.h"
 
 static int stopDatagramService(DomainService *service) {

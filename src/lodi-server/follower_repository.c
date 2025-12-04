@@ -1,3 +1,7 @@
+/*
+ * See follower_repository.h
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
