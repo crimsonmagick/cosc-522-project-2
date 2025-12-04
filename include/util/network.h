@@ -25,8 +25,6 @@ int tcpConnect(int sock, const struct sockaddr_in *serverAddress);
 
 int tcpListen(int sock);
 
-int getDefaultLocalAddress(struct sockaddr_in *remote, struct sockaddr_in *localAddressOut);
-
 int tcpAccept(int sock, struct sockaddr_in *clientAddress, int *clientSock);
 
 int sendTcpMessage(int socket, const char *messageBuffer, size_t messageSize);
