@@ -50,7 +50,7 @@ static int streamClientReceive(DomainClient *self, UserMessage *toReceive) {
 
 
 static int startStreamClient(DomainService *service) {
-  const int sock = getSocket(&service->localAddr,
+  const int sock = getSocket(NULL,
                              &service->receiveTimeout,
                              service->connectionType);
   if (sock < 0) {
