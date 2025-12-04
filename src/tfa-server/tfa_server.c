@@ -101,7 +101,7 @@ void handlePushTfa(TFAClientOrLodiServerToTFAServer *request, ClientHandle *clie
         printf("Failed to send push auth request to TFA client, aborting...\n");
         return;
     }
-    printf("Req C. 3. a. sent pushTFA message\n");
+    printf("sent pushTFA message\n");
 
     TFAClientOrLodiServerToTFAServer pushResponse;
     if (tfaServer->receive(tfaServer, (UserMessage *) &pushResponse, tfaClientHandle) == ERROR) {

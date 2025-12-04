@@ -93,7 +93,6 @@ struct sockaddr_in getNetworkAddress(const char *ipAddress, const unsigned short
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
   }
   addr.sin_port = htons(serverPort);
-  printf("Constructing port: original=%u, byteswapped=%u\n", serverPort, addr.sin_port);
   return addr;
 }
 

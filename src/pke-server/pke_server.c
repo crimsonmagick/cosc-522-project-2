@@ -44,9 +44,9 @@ int main() {
       addKey(receivedMessage.userID, receivedMessage.publicKey);
       responseMessage.messageType = ackRegisterKey;
       responseMessage.publicKey = receivedMessage.publicKey;
-      printf("Req 1. b. Added publicKey=%u for userId=%u\n", responseMessage.publicKey, responseMessage.userID);
+      printf("Added publicKey=%u for userId=%u\n", responseMessage.publicKey, responseMessage.userID);
     } else if (receivedMessage.messageType == requestKey) {
-      printf("Req D. 2. a. received requestKey message \n");
+      printf("Received requestKey message \n");
       unsigned int *publicKey;
       if (getKey(receivedMessage.userID, &publicKey) != SUCCESS) {
         printf("publicKey=%u not found.\n", receivedMessage.publicKey);
@@ -55,7 +55,7 @@ int main() {
         responseMessage.messageType = responsePublicKey;
         responseMessage.publicKey = *publicKey;
       }
-      printf("Req D. 2. b. responding to requestKey message with responsePublicKey\n");
+      printf("Responding to requestKey message with responsePublicKey\n");
     } else {
       printf("Warning: Received message with unknown message type. Skipping...\n");
       continue;
