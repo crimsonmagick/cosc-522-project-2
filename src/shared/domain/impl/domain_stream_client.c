@@ -2,6 +2,8 @@
 * Implementation of TCP Client.
 */
 
+#include <errno.h>
+
 #include "domain_stream_shared.h"
 
 static int streamClientFromHost(DomainClient *client, void *message) {
@@ -31,7 +33,8 @@ static int streamClientFromHost(DomainClient *client, void *message) {
 
 static int streamClientSend(DomainClient *self, UserMessage *toSend) {
   if (!self->isConnected && tcpConnect(self->base.sock, &self->remoteAddr) == ERROR) {
-    printf("Stream Client: Error connecting to server, aborting...\n");
+    printf("Stream Client: Error connecting to server, errno=%d, aborting...\n", errno);
+    perror("Stream Client Error");
     return DOMAIN_FAILURE;
   }
   self->isConnected = true;
