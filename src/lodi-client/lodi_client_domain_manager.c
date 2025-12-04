@@ -11,26 +11,35 @@
 #include "domain/lodi.h"
 #include "domain/pke.h"
 
+static DomainClient *lodiClient = NULL;
 static DomainClient *pkeClient = NULL;
 
 int lodiClientSend(const PClientToLodiServer *inRequest, LodiServerMessage *outResponse) {
-  DomainClient *lodiClient = NULL;
-  initLodiClient(&lodiClient);
-
-  lodiClient->base.start(&lodiClient->base);
-
   int status = SUCCESS;
-  if (lodiClient->send(lodiClient, (UserMessage *) inRequest) == ERROR) {
+  if (lodiClient == NULL && initLodiClient(&lodiClient) == ERROR) {
+    printf("Failed to initialize Lodi Client\n");
+    return ERROR;
+  }
+
+  if (lodiClient->base.start(&lodiClient->base) == DOMAIN_FAILURE) {
+    printf("Failed to start Lodi Client\n");
+    return ERROR;
+  };
+
+  if (lodiClient->send(lodiClient, (UserMessage *) inRequest) != DOMAIN_SUCCESS) {
+    printf("Failed to send from Lodi Client\n");
     status = ERROR;
   }
 
-  if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) outResponse) == DOMAIN_FAILURE) {
+  if (status == SUCCESS && lodiClient->receive(lodiClient, (UserMessage *) outResponse) != DOMAIN_SUCCESS) {
+    printf("Failed to receive from Lodi Client\n");
     status = ERROR;
   }
 
-  DomainService *baseRef = &lodiClient->base;
-  lodiClient->base.stop(baseRef);
-  lodiClient->base.destroy(&baseRef);
+  if (lodiClient->base.stop(&lodiClient->base) == DOMAIN_FAILURE) {
+    printf("Failed to stop Lodi Client\n");
+    status = ERROR;
+  }
   return status;
 }
 
