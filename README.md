@@ -120,10 +120,6 @@ Use the up and down arrows to select another session, and press enter to select 
 
 As per specs, only the clients can be interacted with directly. The server sessions will only have reactive output.
 
-### Important Note
-Please start up each of the servers before running the client programs. The clients will only properly connect if the
-server ports are open.
-
 ### Generating a public/private key pair
 Optionally use the `rsa_generate` program to generate the private/public key pair:
 
