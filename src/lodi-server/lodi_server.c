@@ -269,13 +269,13 @@ static int sendPushRequest(const unsigned int userID) {
     .userID = userID
   };
 
-  if (tfaClient->send(tfaClient, (UserMessage *) &requestMessage) == ERROR) {
+  if (tfaClient->send(tfaClient, (UserMessage *) &requestMessage) == DOMAIN_FAILURE) {
     printf("[ERROR] Unable to send push notification, aborting...\n");
     return ERROR;
   }
 
   TFAServerToLodiServer response;
-  if (tfaClient->receive(tfaClient, (UserMessage *) &response) == ERROR) {
+  if (tfaClient->receive(tfaClient, (UserMessage *) &response) == DOMAIN_FAILURE) {
     printf("[ERROR] Unable to receive push notification response, aborting...\n");
     return ERROR;
   }
