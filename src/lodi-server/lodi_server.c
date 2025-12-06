@@ -227,6 +227,12 @@ static void handleFailure(PClientToLodiServer *request, ClientHandle *clientHand
   }
 }
 
+/**
+ * Responsible for the initial dump of followed idol messages when a user logs in.
+ *
+ * @param userId user that is requesting a new stream, i.e. just logged in
+ * @param remoteHandle client details (so we can repeatedly send)
+ */
 static void handleFeed(const unsigned int userId, ClientHandle *remoteHandle) {
   printf("[DEBUG] Handling feed subscription request.\n");
   addListener(remoteHandle);
@@ -286,6 +292,12 @@ static int sendPushRequest(const unsigned int userID) {
   return SUCCESS;
 }
 
+/**
+ * Responsible for handling the COSC 522 requirement of streaming new messages automatically to logged-in followers.
+ *
+ * @param idolId The idol that just made a post
+ * @param message The idol's new post
+ */
 static void pushFeedMessage(const unsigned int idolId, char *message) {
   printf("[DEBUG] Publishing messages to idol followers\n");
   List *followers;

@@ -47,6 +47,16 @@ void stopStreamFeed(const int pid) {
   printf("[FEED DEBUG] Killed child!\n");
 }
 
+/**
+ * This fulfills the COSC 522 requirement - upon login, this separate thread dedicates itself to streaming messages from
+ * the server for followed idols. The server immediately streams all existing followed idols' messages, and then streams
+ * additional messages in real time as they're posted.
+ *
+ * @param userId User to start stream messages for
+ * @param timestamp Login timestamp
+ * @param digitalSig Login digital signature
+ * @return
+ */
 static int handleClientFeed(const unsigned int userId, const unsigned long timestamp,
                             const unsigned long digitalSig) {
   printf("[FEED DEBUG] Initializing feed...\n");
