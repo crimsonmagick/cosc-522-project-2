@@ -24,8 +24,6 @@ static DomainServer *tfaServer = NULL;
 
 /**
  * Giant main function for TFA Server.
- * Fulfills all of Req 3.
- * @return nothing, loops forever and ever
  */
 int main() {
     if (initPkeClient(&pkeClient) == ERROR
@@ -113,7 +111,7 @@ void handlePushTfa(TFAClientOrLodiServerToTFAServer *request, ClientHandle *clie
         printf("Did not receive expected ack push message, aborting push auth...\n");
         return;
     }
-    printf("Req C. 3. b. received ackPushTFA message\n");
+    printf("Received ackPushTFA message\n");
 
     TFAServerToLodiServer pushNotificationResponse = {
         responseAuth,
@@ -123,5 +121,5 @@ void handlePushTfa(TFAClientOrLodiServerToTFAServer *request, ClientHandle *clie
     if (sendSuccess == ERROR) {
         printf("Error while sending push response to Lodi server\n");
     }
-    printf("Req C. 2. .b sent responseAuth message\n");
+    printf("ResponseAuth message\n");
 }

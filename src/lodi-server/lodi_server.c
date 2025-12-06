@@ -116,7 +116,7 @@ static int authenticate(PClientToLodiServer *request) {
 }
 
 static void handleLogin(PClientToLodiServer *request, ClientHandle *clientHandle) {
-  printf("[LODI_SERVER] logging in user...\n");
+  printf("[LODI_SERVER] attempting to login user...\n");
 
   LodiServerMessage responseMessage = {
     .userID = request->userID
@@ -129,16 +129,20 @@ static void handleLogin(PClientToLodiServer *request, ClientHandle *clientHandle
   if (responseMessage.messageType == ackLogin && sendPushRequest(request->userID) == ERROR) {
     printf("[ERROR] Failed to authenticate with push confirmation!\n");
     responseMessage.messageType = failure;
-  } else {
+  } else if (responseMessage.messageType == ackLogin) {
     printf("[DEBUG] Validated TFA successfully!\n");
   }
 
-  if (isUserLoggedIn(clientHandle)) {
+  if (responseMessage.messageType == ackLogin && isUserLoggedIn(clientHandle)) {
     printf("[WARNING] User is already logged in, invalidating previous session.\n");
     userLogout(clientHandle);
   }
 
-  userLogin(clientHandle);
+  if (responseMessage.messageType == ackLogin) {
+    userLogin(clientHandle);
+  } else {
+    printf("[ERROR] Login failed!\n");
+  }
 
   if (lodiServer->send(lodiServer, (UserMessage *) &responseMessage, clientHandle) == ERROR) {
     printf("[WARMING] Error while sending Lodi login response.\n");

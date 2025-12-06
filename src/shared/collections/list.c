@@ -7,12 +7,18 @@
 #include "collections/list.h"
 #include "shared.h"
 
+/**
+ * Encapsulates a single element
+ */
 typedef struct Node {
     struct Node *prev;
     struct Node *next;
     void *element; // Caller-owned pointer
 } Node;
 
+/**
+ * Encapsulates the state of a LinkedList
+ */
 typedef struct LinkedList {
     List base;
     Node sentinel;
@@ -40,11 +46,14 @@ static int append(List *list, void *element) {
 
 static int get(List *list, int idx, void **element) {
     LinkedList *impl = (LinkedList *) list;
-    if (idx < 0 || idx >= list->length || !element) return ERROR;
+    if (idx < 0 || idx >= list->length || !element) {
+        return ERROR;
+    }
 
     Node *n = impl->sentinel.next;
-    for (int i = 0; i < idx; i++)
+    for (int i = 0; i < idx; i++) {
         n = n->next;
+    }
 
     *element = n->element;
     return SUCCESS;
@@ -52,11 +61,14 @@ static int get(List *list, int idx, void **element) {
 
 static int remove(List *list, int idx, void **element) {
     LinkedList *impl = (LinkedList *) list;
-    if (idx < 0 || idx >= list->length) return ERROR;
+    if (idx < 0 || idx >= list->length) {
+        return ERROR;
+    }
 
     Node *n = impl->sentinel.next;
-    for (int i = 0; i < idx; i++)
+    for (int i = 0; i < idx; i++) {
         n = n->next;
+    }
 
     if (element) {
         *element = n->element; // Caller reclaims ownership
@@ -72,7 +84,9 @@ static int remove(List *list, int idx, void **element) {
 }
 
 static void destroy(List **list) {
-    if (!list || !*list) return;
+    if (!list || !*list) {
+        return;
+    }
 
     LinkedList *impl = (LinkedList *) *list;
     Node *n = impl->sentinel.next;
@@ -89,10 +103,14 @@ static void destroy(List **list) {
 }
 
 int createList(List **list) {
-    if (!list) return ERROR;
+    if (!list) {
+        return ERROR;
+    }
 
     LinkedList *impl = malloc(sizeof(LinkedList));
-    if (!impl) return ERROR;
+    if (!impl) {
+        return ERROR;
+    }
 
     impl->base.length = 0;
     impl->base.append = append;

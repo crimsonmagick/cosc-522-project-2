@@ -52,7 +52,7 @@ int main() {
 }
 
 /**
- * Handles push auth TFA requests - fulfills Req B. 2.
+ * Handles push auth TFA requests
  */
 void handleTFAPush() {
     while (true) {
@@ -70,7 +70,7 @@ void handleTFAPush() {
             printf("Received non pushTFA messaging... discarding and continuing...\n");
         }
 
-        printf("Req. B. 2. a. Received pushTFA message\n");
+        printf("Received pushTFA message\n");
         TFAClientOrLodiServerToTFAServer toSendMessage = {
             .messageType = ackPushTFA,
             .userID = pushRequest.userID,
@@ -84,13 +84,13 @@ void handleTFAPush() {
         if (sendStatus == ERROR) {
             printf("Error while sending push ack.\n");
         } else {
-            printf("Req B. 2. b. Responded to push auth request successfully with ackPushTFA!\n");
+            printf("Responded to push auth request successfully with ackPushTFA!\n");
         }
     }
 }
 
 /**
- * Registers the TFA client's port and IP address, fulfilling Req B. 1
+ * Registers the TFA client's port and IP address.
  *
  * @param userID user that's registering their "device"
  * @param timestamp nonce

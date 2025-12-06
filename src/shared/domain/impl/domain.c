@@ -15,9 +15,11 @@ static struct timeval createTimeout(const int timeoutMs) {
 }
 
 /**
- * @param service
- * @param timeoutMs
- * @return
+ * Changes receive timeout for a service.
+ *
+ * @param service to-modify
+ * @param timeoutMs receive timeout in ms
+ * @return DOMAIN_SUCCESS or DOMAIN_FAILURE
  */
 static int changeTimeout(DomainService *service, const int timeoutMs) {
   const struct timeval timeout = createTimeout(timeoutMs);
@@ -29,7 +31,12 @@ static int changeTimeout(DomainService *service, const int timeoutMs) {
   return DOMAIN_SUCCESS;
 }
 
-
+/**
+ * Initializer function common to both clients and servers
+ *
+ * @param options configuration options
+ * @param service to-initialize
+ */
 static void initializeGenericService(DomainServiceOpts options,
                                      DomainService *service) {
   service->sock = INACTIVE_SOCK;
@@ -47,6 +54,13 @@ static void initializeGenericService(DomainServiceOpts options,
   service->destroy = destroyDatagramService;
 }
 
+/**
+ * Allocates and configures a new DomainServer.
+ *
+ * @param options configuration options
+ * @param server newly allocated and configured server
+ * @return DOMAIN_SUCCESS, DOMAIN_FAILURE
+ */
 int createServer(const DomainServiceOpts options, DomainServer **server) {
   *server = calloc(1, sizeof(DomainServer));
   if (*server == NULL) {
@@ -71,6 +85,13 @@ int createServer(const DomainServiceOpts options, DomainServer **server) {
   return DOMAIN_SUCCESS;
 }
 
+/**
+ * Allocates and configures a new DomainClient.
+ *
+ * @param options configuration options
+ * @param client newly allocated and configured client
+ * @return DOMAIN_SUCCESS, DOMAIN_FAILURE
+ */
 int createClient(DomainClientOpts options, DomainClient **client) {
   *client = calloc(1, sizeof(DomainClient));
   if (*client == NULL) {

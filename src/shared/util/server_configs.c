@@ -30,7 +30,7 @@ static char *SERVER_DEFAULT_PORTS[] = {
 /**
  * Gets human-readable server config
  * @param server
- * @return
+ * @return ServerConfig as value
  */
 ServerConfig getServerConfig(const enum Server server) {
   char *address = getenv(SERVER_ADDRESS_KEYS[server]);

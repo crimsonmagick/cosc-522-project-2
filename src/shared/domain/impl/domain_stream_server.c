@@ -1,5 +1,5 @@
 /**
-* Implementation of TCP Server
+* Implementation of core TCP Server
 */
 
 #include "domain_stream_shared.h"
@@ -33,8 +33,14 @@ static int streamServerFromHost(DomainServer *server, void *message, int sock) {
   return status;
 }
 
-// returns max FD
-static int setUpDescriptors(DomainServer *self, fd_set *allSocks) {
+/**
+ * Initializes fd_set
+ *
+ * @param self
+ * @param allSocks set to initialize
+ * @return The max file descriptor
+ */
+static int initDescriptors(DomainServer *self, fd_set *allSocks) {
   FD_ZERO(allSocks);
   FD_SET(self->base.sock, allSocks);
   int maxFd = self->base.sock;
@@ -50,15 +56,32 @@ static int setUpDescriptors(DomainServer *self, fd_set *allSocks) {
   return maxFd;
 }
 
+/**
+ * Tests timeval struct to determine if it's non-zero.
+ *
+ * @param timeout to evaluate
+ * @return true, false
+ */
 static bool isTimeoutEnabled(struct timeval * timeout) {
   return timeout != NULL && (timeout->tv_sec > 0 || timeout->tv_usec > 0);
 }
 
+/**
+ * Stream/TCP implementation of DomainServer#receive
+ *
+ * Utilizes select() to multiplex between accepting new connections (via the server's socket) and multiple concurrently
+ * active client sockets.
+ *
+ * @param self self-reference
+ * @param toReceiveOut inbound message
+ * @param clientCallbackOut client details associated with the message
+ * @return
+ */
 static int streamServerReceive(DomainServer *self, UserMessage *toReceiveOut,
-                               ClientHandle *clientHandleOut) {
+                               ClientHandle *clientCallbackOut) {
   while (true) {
     fd_set allSocks;
-    const int maxFd = setUpDescriptors(self, &allSocks);
+    const int maxFd = initDescriptors(self, &allSocks);
     struct timeval *timeout = isTimeoutEnabled(&self->base.receiveTimeout) ? &self->base.receiveTimeout : NULL;
     const int rv = select(maxFd + 1, &allSocks, NULL, NULL, timeout);
     if (rv == -1) {
@@ -69,6 +92,7 @@ static int streamServerReceive(DomainServer *self, UserMessage *toReceiveOut,
       printf("Stream Server: select timeout\n");
       return DOMAIN_FAILURE;
     }
+    // do we have a new connection we need to accept()?
     if (FD_ISSET(self->base.sock, &allSocks)) {
       struct sockaddr_in clientAddr;
       int clientSock;
@@ -82,22 +106,26 @@ static int streamServerReceive(DomainServer *self, UserMessage *toReceiveOut,
       client->clientAddr = clientAddr;
       self->clients->append(self->clients, client);
     } else {
+      // if there's no pending connections, at least one of the persistent clients sockets must have data available
       for (int i = 0; i < self->clients->length; i++) {
         ClientHandle *clientHandle;
         self->clients->get(self->clients, i, (void **) &clientHandle);
         if (FD_ISSET(clientHandle->clientSock, &allSocks)) {
+          // we found a socket needing servicing!
           const int resp = streamServerFromHost(self, toReceiveOut, clientHandle->clientSock);
           if (resp == DOMAIN_SUCCESS) {
+            // received client message
             clientHandle->userID = toReceiveOut->userID;
-            clientHandleOut->userID = clientHandle->userID;
-            clientHandleOut->clientSock = clientHandle->clientSock;
-            clientHandleOut->clientAddr = clientHandle->clientAddr;
+            clientCallbackOut->userID = clientHandle->userID;
+            clientCallbackOut->clientSock = clientHandle->clientSock;
+            clientCallbackOut->clientAddr = clientHandle->clientAddr;
           } else if (resp == TERMINATED) {
-            if (self->clients->remove(self->clients, i, (void **) &clientHandleOut) == ERROR) {
-              printf("Stream Server: remove failed\n");
+            // client terminated connection - remove from list of clients and inform caller in case they're interested
+            if (self->clients->remove(self->clients, i, (void **) &clientCallbackOut) == ERROR) {
+              printf("[ERROR] Stream Server: remove failed\n");
             }
-            close(clientHandleOut->clientSock);
-            free(clientHandleOut);
+            close(clientCallbackOut->clientSock);
+            free(clientCallbackOut);
           }
           return resp;
         }
@@ -106,6 +134,9 @@ static int streamServerReceive(DomainServer *self, UserMessage *toReceiveOut,
   }
 }
 
+/**
+ * @see DomainService#start
+ */
 static int startStreamServer(DomainService *service) {
   const int sock = getSocket(&service->localAddr,
                              &service->receiveTimeout,

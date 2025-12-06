@@ -6,6 +6,13 @@
 
 #include "domain_stream_shared.h"
 
+/**
+ * Sends message on a client's socket.
+ *
+ * @param client self-reference
+ * @param message to send
+ * @return DOMAIN_SUCCESS, DOMAIN_FAILURE, or TERMINATED
+ */
 static int streamClientFromHost(DomainClient *client, void *message) {
   char *buf = malloc(client->base.incomingDeserializer.messageSize);
   if (!buf) {
@@ -31,24 +38,32 @@ static int streamClientFromHost(DomainClient *client, void *message) {
   return status;
 }
 
+/**
+ * @see DomainClient#send
+ */
 static int streamClientSend(DomainClient *self, UserMessage *toSend) {
   if (!self->isConnected && tcpConnect(self->base.sock, &self->remoteAddr) == ERROR) {
-    printf("Stream Client: Error connecting to server, errno=%d, aborting...\n", errno);
-    perror("Stream Client Error");
+    printf("[ERROR] Stream Client: Error connecting to server, errno=%d, aborting...\n", errno);
+    perror("[ERROR] Stream Client Error");
     return DOMAIN_FAILURE;
   }
   self->isConnected = true;
   return toStreamDomainHost((DomainService *) self, toSend, self->base.sock);
 }
 
+/**
+ * @see DomainClient#receive
+ */
 static int streamClientReceive(DomainClient *self, UserMessage *toReceive) {
   if (!self->isConnected) {
-    printf("Stream Client: Should always be connected before receiving, aborting...\n");
+    printf("[ERROR] Stream Client: Should always be connected before receiving, aborting...\n");
   }
   return streamClientFromHost(self, toReceive);
 }
 
-
+/**
+ * @see DomainClient#start
+ */
 static int startStreamClient(DomainService *service) {
   const int sock = getSocket(NULL,
                              &service->receiveTimeout,
@@ -60,6 +75,9 @@ static int startStreamClient(DomainService *service) {
   return DOMAIN_SUCCESS;
 }
 
+/**
+ * @see DomainClient#stop
+ */
 static int stopStreamClient(DomainService *service) {
   if (stopStreamService(service) != DOMAIN_FAILURE) {
     ((DomainClient *) service)->isConnected = false;

@@ -32,7 +32,9 @@ int userLogout(const ClientHandle *userClient) {
     free(persisted);
   } else {
     printf("Error: unable to remove logged-in client handle, rv=%d\n", rv);
+    return ERROR;
   }
+  return SUCCESS;
 }
 
 int isUserLoggedIn(const ClientHandle *userClient) {

@@ -4,6 +4,9 @@
 
 #include "domain_shared.h"
 
+/**
+ * @see DomainService#stop
+ */
 static int stopDatagramService(DomainService *service) {
   if (service->sock >= 0 && close(service->sock) < 0) {
     return DOMAIN_FAILURE;
@@ -13,9 +16,7 @@ static int stopDatagramService(DomainService *service) {
 }
 
 /**
- *
- * @param service
- * @return
+ * @see DomainService#destroy
  */
 static int destroyDatagramService(DomainService **service) {
   if (*service != NULL) {
@@ -28,11 +29,12 @@ static int destroyDatagramService(DomainService **service) {
 }
 
 /**
+ * Sends a message to a Datagram host.
  *
- * @param service
- * @param message
- * @param hostAddr
- * @return
+ * @param service self-reference
+ * @param message to send
+ * @param hostAddr destination host
+ * @return DOMAIN_SUCCESS or DOMAIN_FAILURE
  */
 static int toDatagramDomainHost(DomainService *service,
                                 void *message,
@@ -58,10 +60,11 @@ static int toDatagramDomainHost(DomainService *service,
 }
 
 /**
+ * Receives a message from a Datagram host.
  *
- * @param service
- * @param message
- * @param hostAddr
+ * @param service self-reference
+ * @param message caller-allocated space for received message
+ * @param hostAddr host to receive from
  * @return
  */
 static int fromDatagramDomainHost(DomainService *service,
@@ -90,10 +93,16 @@ static int fromDatagramDomainHost(DomainService *service,
   return status;
 }
 
+/**
+ *  @see DomainClient#send
+ */
 static int datagramClientSend(DomainClient *self, UserMessage *toSend) {
   return toDatagramDomainHost((DomainService *) self, toSend, &self->remoteAddr);
 }
 
+/**
+ * @see DomainClient#receive
+ */
 static int datagramClientReceive(DomainClient *self, UserMessage *toReceive) {
   struct sockaddr_in receiveAddr;
   int resp = fromDatagramDomainHost((DomainService *) self, toReceive, &receiveAddr);
@@ -118,11 +127,17 @@ static int datagramClientReceive(DomainClient *self, UserMessage *toReceive) {
   return resp;
 }
 
+/**
+ *  @see DomainServer#send
+ */
 static int datagramServerSend(DomainServer *self, UserMessage *toSend,
                               ClientHandle *remoteTarget) {
   return toDatagramDomainHost((DomainService *) self, toSend, &remoteTarget->clientAddr);
 }
 
+/**
+ *  @see DomainServer#receive
+ */
 static int datagramServerReceive(DomainServer *self, UserMessage *toReceive,
                                  ClientHandle *remote) {
   struct sockaddr_in receiveAddr;
@@ -134,6 +149,9 @@ static int datagramServerReceive(DomainServer *self, UserMessage *toReceive,
   return resp;
 }
 
+/**
+ *  @see DomainServer#start
+ */
 static int startDatagramServer(DomainService *service) {
   const int sock = getSocket(&service->localAddr,
                              &service->receiveTimeout,
@@ -145,6 +163,9 @@ static int startDatagramServer(DomainService *service) {
   return DOMAIN_SUCCESS;
 }
 
+/**
+ *  @see DomainClient#start
+ */
 static int startDatagramClient(DomainService *service) {
   const int sock = getSocket(NULL,
                              &service->receiveTimeout,
